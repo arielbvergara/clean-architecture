@@ -1,0 +1,3 @@
+namespace Application.Dtos.User;
+
+public record GetUserByIdRequest(Guid UserId);
