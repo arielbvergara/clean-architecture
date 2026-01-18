@@ -9,7 +9,6 @@
 6. Remove unused classes.
 7. Add mcp.json
 8. Add global.json
-9. Check this out https://github.com/bitfoundation/bitplatform/blob/develop/.github/copilot-instructions.md
-   10.USE:
+9. USE:
    [dotnet.test.runner]
    name = "Microsoft.Testing.Platform"
