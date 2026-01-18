@@ -1,0 +1,16 @@
+<Solution>
+  <Project Path="TodoApp.Domain/TodoApp.Domain.csproj" />
+  <Folder Name="/SolutionItems/">
+    <File Path="..\.gitignore" />
+    <File Path="..\README.md" />
+    <File Path="..\WARP.md" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="TodoApp.Tests/TodoApp.Application.Tests/TodoApp.Application.Tests.csproj" />
+    <Project Path="TodoApp.Tests/TodoApp.Infrastructure.Tests/TodoApp.Infrastructure.Tests.csproj" />
+    <Project Path="TodoApp.Tests/TodoApp.WebAPI.Tests/TodoApp.WebAPI.Tests.csproj" />
+  </Folder>
+  <Project Path="TodoApp.Application/TodoApp.Application.csproj" />
+  <Project Path="TodoApp.Infrastructure/TodoApp.Infrastructure.csproj" />
+  <Project Path="TodoApp.WebAPI/TodoApp.WebAPI.csproj" />
+</Solution>
