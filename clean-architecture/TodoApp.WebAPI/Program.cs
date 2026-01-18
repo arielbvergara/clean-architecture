@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TodoApp.Application.Interfaces;
-using TodoApp.Application.Services;
-using TodoApp.Domain.Entities;
-using TodoApp.Domain.Enums;
+using TodoApp.Application.UseCases;
 using TodoApp.Infrastructure.Data;
 using TodoApp.Infrastructure.Repositories;
 using TodoApp.WebAPI.Filters;
@@ -15,22 +13,19 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-
-        var useInMemoryDb = builder.Configuration.GetValue<bool>("UseInMemoryDB");
-
         // Add services to the container.
-
         builder.Services.AddControllers(options => { options.Filters.Add<GlobalExceptionFilter>(); });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddScoped<IToDoItemService, ToDoItemService>();
-        builder.Services.AddScoped<IToDoListService, ToDoListService>();
 
-        builder.Services.AddScoped<IToDoItemRepository, ToDoItemRepository>();
-        builder.Services.AddScoped<IToDoListRepository, ToDoListRepository>();
+        // Repositories
+        var useInMemoryDb = builder.Configuration.GetValue<bool>("UseInMemoryDB");
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+        // Application use cases
+        builder.Services.AddUseCases();
 
         if (useInMemoryDb)
         {
@@ -71,7 +66,6 @@ public class Program
             // Seed data. Use this config for in memory database
             using var scope = app.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            SeedData(context); // Call to seed data
         }
         else
         {
@@ -82,38 +76,5 @@ public class Program
         }
 
         app.Run();
-    }
-
-    private static void SeedData(AppDbContext context)
-    {
-       context.ToDoLists.AddRange(
-            new ToDoList
-            {
-                ToDoListId = 1, Title = "Groceries", Description = "Things to buy",
-                CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now
-            },
-            new ToDoList
-            {
-                ToDoListId = 2, Title = "Work", Description = "Work-related tasks",
-                CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now
-            }
-        );
-
-        context.ToDoItems.AddRange(
-            new ToDoItem
-            {
-                ToDoItemId = 1, ToDoListId = 1, Title = "Buy milk", Description = "Get whole milk",
-                DueDate = DateTime.Now.AddDays(2), IsCompleted = false, Priority = PriorityLevel.Medium,
-                CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now
-            },
-            new ToDoItem
-            {
-                ToDoItemId = 2, ToDoListId = 1, Title = "Buy eggs", Description = "Get a dozen eggs",
-                DueDate = DateTime.Now.AddDays(3), IsCompleted = false, Priority = PriorityLevel.High,
-                CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now
-            }
-        );
-
-        context.SaveChanges(); // Save changes to the in-memory database
     }
 }
