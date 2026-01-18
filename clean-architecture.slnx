@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+    <File Path="WARP.md" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="clean-architecture/Tests/Application.Tests/Application.Tests.csproj" />
+    <Project Path="clean-architecture/Tests/Infrastructure.Tests/Infrastructure.Tests.csproj" />
+    <Project Path="clean-architecture/Tests/WebAPI.Tests/WebAPI.Tests.csproj" />
+  </Folder>
+  <Project Path="clean-architecture/Domain/Domain.csproj" />
+  <Project Path="clean-architecture/Application/Application.csproj" />
+  <Project Path="clean-architecture/Infrastructure/Infrastructure.csproj" />
+  <Project Path="clean-architecture/WebAPI/WebAPI.csproj" />
+</Solution>
