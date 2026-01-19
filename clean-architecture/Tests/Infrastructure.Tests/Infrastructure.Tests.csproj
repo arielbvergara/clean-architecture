@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <DotNetTestRunner>Microsoft.Testing.Platform</DotNetTestRunner>
   </PropertyGroup>
 
   <ItemGroup>

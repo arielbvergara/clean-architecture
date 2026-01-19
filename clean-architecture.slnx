@@ -2,7 +2,6 @@
   <Folder Name="/SolutionItems/">
     <File Path=".gitignore" />
     <File Path="README.md" />
-    <File Path="WARP.md" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="clean-architecture/Tests/Application.Tests/Application.Tests.csproj" />
