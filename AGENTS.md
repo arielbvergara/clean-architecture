@@ -113,3 +113,25 @@ Use the standard `--filter` syntax supported by `dotnet test` (and honored by Mi
 
 - There is currently no repo-specific `.config/dotnet-tools.json` or dedicated lint/format configuration.
 - Static analysis and nullable reference checks run as part of the normal `dotnet build` process using the SDK’s built-in analyzers and project settings (e.g., `<Nullable>enable</Nullable>`).
+
+## MCP Server Usage Rules
+
+- **microsoft.docs.mcp**
+  Use for all questions about **.NET, C#, ASP.NET, Azure, Microsoft APIs, defaults, configuration, or official best practices**.
+  Mandatory when exact values or official guidance are required.
+
+- **github**
+  Use for questions about **GitHub repositories, source code, implementations, or project structure**.
+
+- **DeepWiki**
+  Use for **high-level explanations, overviews, summaries, and conceptual questions**.
+
+### Priority
+1. Microsoft Docs  
+2. GitHub  
+3. DeepWiki
+
+### Mandatory Rules
+- Do **not** guess when factual accuracy is required — use MCP.
+- If MCP fails or returns no data, **say so explicitly**.
+- Do not silently fall back to generic answers.
