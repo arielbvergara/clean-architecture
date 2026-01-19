@@ -2,6 +2,7 @@
   <Folder Name="/SolutionItems/">
     <File Path=".gitignore" />
     <File Path="AGENTS.md" />
+    <File Path="mcp.json" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Tests/">
