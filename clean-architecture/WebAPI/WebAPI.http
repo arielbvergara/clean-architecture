@@ -1,0 +1,37 @@
+@WebAPI_HostAddress = http://localhost:5055
+@UserId = 00000000-0000-0000-0000-000000000000
+@UserEmail = user@example.com
+
+### Create user
+POST {{WebAPI_HostAddress}}/api/User
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{UserEmail}}",
+  "name": "Test User",
+  "externalAuthId": "external-auth-id-123"
+}
+
+### Get user by id
+GET {{WebAPI_HostAddress}}/api/User/{{UserId}}
+Accept: application/json
+
+### Get user by email
+GET {{WebAPI_HostAddress}}/api/User/email/{{UserEmail}}
+Accept: application/json
+
+### Update user name
+PUT {{WebAPI_HostAddress}}/api/User/{{UserId}}/name
+Accept: application/json
+Content-Type: application/json
+
+{
+  "newName": "Updated User Name"
+}
+
+### Delete user
+DELETE {{WebAPI_HostAddress}}/api/User/{{UserId}}
+Accept: application/json
+
+###
