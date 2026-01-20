@@ -1,14 +1,35 @@
-# clean-architecture
+# Clean Architecture .NET Sample
 
-## TODO
-1. Use dotnet 10 and SLNX (DONE)
-2. Use value object (clean architecture) (DONE)
-3. Clean up usings (DONE)
-4. Add dockerfile
-5. Add PostgressSql using docker-compose
-6. Remove unused classes. (DONE)
-7. Add mcp.json (DONE) 
-8. Add global.json (DONE)
-9. USE (DONE)
-   [dotnet.test.runner]
-   name = "Microsoft.Testing.Platform"
+This repository contains a layered .NET 10.0 Web API implementing a simple user management domain using Clean Architecture principles.
+
+## Project Structure
+
+- `clean-architecture.slnx` – Solution file targeting `net10.0`.
+- `clean-architecture/Domain` – Core domain model:
+   - Entities, value objects, and primitives (e.g., `Result<T, TE>`).
+   - No dependencies on other layers; persistence-agnostic.
+- `clean-architecture/Application` – Application layer:
+   - Use cases, DTOs, interfaces (ports), and application exceptions.
+   - Uses `Result<..., AppException>` to represent success/failure.
+- `clean-architecture/Infrastructure` – Infrastructure layer:
+   - EF Core `AppDbContext`, entity configurations, repositories.
+   - Implements application interfaces (e.g., `IUserRepository`).
+- `clean-architecture/WebAPI` – ASP.NET Core Web API:
+   - Controllers, global exception filter, DI wiring, and Swagger.
+   - Configurable persistence (in‑memory or SQL Server).
+- `clean-architecture/Tests` – Test projects:
+   - `Application.Tests`, `Infrastructure.Tests`, `WebAPI.Tests` using xUnit and Microsoft Testing Platform.
+
+## Getting Started
+
+### Prerequisites
+
+- .NET SDK 10.0 (or later)
+- Optional: SQL Server instance if not using the in‑memory database
+
+### Build
+
+From the repository root:
+
+```bash
+dotnet build clean-architecture.slnx
