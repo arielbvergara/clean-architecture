@@ -83,6 +83,11 @@ Behavior:
 
 All test projects use xUnit with `Microsoft.Testing.Platform` as the runner.
 
+### Test assertions
+
+- Prefer `FluentAssertions` for assertions in all C# test projects (Application, Infrastructure, WebAPI).
+- Use the `obj.Should().Be(...)` style instead of `Assert.Equal(...)` where practical.
+
 ### Run all tests
 
 - From the repository root:

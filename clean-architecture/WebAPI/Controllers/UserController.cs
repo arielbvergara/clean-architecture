@@ -123,5 +123,3 @@ public class UserController(
         };
     }
 }
-
-public record UpdateUserNameDto(string NewName);
