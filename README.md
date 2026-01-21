@@ -33,3 +33,26 @@ From the repository root:
 
 ```bash
 dotnet build clean-architecture.slnx
+```
+
+### Run with Docker Compose (PostgreSQL + WebAPI)
+
+From the repository root, you can start the API and a PostgreSQL database using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This will:
+- Start a `postgres` container with a dev-only database and credentials.
+- Build and start the `webapi` container configured to talk to that Postgres instance.
+
+Once running:
+- API base URL (inside Docker): `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger`
+
+To stop the environment:
+
+```bash
+docker compose down
+```

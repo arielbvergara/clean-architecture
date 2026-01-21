@@ -10,4 +10,13 @@ public static class AppDbContextFactory
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase("AppDb"));
     }
+
+    public static void AddPostgresDatabase(this IServiceCollection services, string connectionString)
+    {
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure();
+            }));
+    }
 }

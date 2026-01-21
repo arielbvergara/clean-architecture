@@ -21,7 +21,10 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         // Repositories
-        var useInMemoryDb = builder.Configuration.GetValue<bool>("UseInMemoryDB");
+        // Always use in-memory database for the Testing environment, regardless of configuration
+        var useInMemoryDb = builder.Configuration.GetValue<bool>("UseInMemoryDB") ||
+                            builder.Environment.IsEnvironment("Testing");
+
         builder.Services.AddScoped<IUserRepository, UserRepository>();
 
         // Application use cases
@@ -34,25 +37,22 @@ public class Program
         }
         else
         {
-            //use this for real database on your sql server
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                {
-                    options.UseSqlServer(
-                        builder.Configuration.GetConnectionString("DbContext"),
-                        providerOptions => providerOptions.EnableRetryOnFailure()
-                    );
-                }
-            );
+            // Use PostgreSQL as the real database when not using the in-memory provider
+            var connectionString = builder.Configuration.GetConnectionString("DbContext")
+                                   ?? throw new InvalidOperationException(
+                                       "PostgreSQL connection string 'DbContext' is missing.");
+
+            builder.Services.AddPostgresDatabase(connectionString);
         }
 
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
+        // if (app.Environment.IsDevelopment())
+        // {
             app.UseSwagger();
             app.UseSwaggerUI();
-        }
+        // }
 
         app.UseHttpsRedirection();
 
