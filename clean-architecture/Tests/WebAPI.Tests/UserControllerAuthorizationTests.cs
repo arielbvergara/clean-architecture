@@ -111,4 +111,49 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    [Fact]
+    public async Task GetUserById_ShouldReturnOk_WhenAdminAccessesAnotherUsersResource()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        const string ownerExternalId = "owner-admin-target";
+        const string adminExternalId = "admin-external";
+
+        Guid ownerUserId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var ownerEmail = Email.Create("admin-target@example.com");
+            var ownerName = UserName.Create("Admin Target User");
+            var ownerExtId = ExternalAuthIdentifier.Create(ownerExternalId);
+
+            var ownerUser = User.Create(ownerEmail, ownerName, ownerExtId);
+
+            var adminEmail = Email.Create("admin@example.com");
+            var adminName = UserName.Create("Admin User");
+            var adminExtId = ExternalAuthIdentifier.Create(adminExternalId);
+            var adminUser = User.Create(adminEmail, adminName, adminExtId);
+
+            context.Users.Add(ownerUser);
+            context.Users.Add(adminUser);
+            await context.SaveChangesAsync(CancellationToken.None);
+
+            ownerUserId = ownerUser.Id.Value;
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{ownerUserId}");
+        request.Headers.Add("X-Test-ExternalId", adminExternalId);
+        request.Headers.Add("X-Test-Role", "Admin");
+
+        // Act
+        var response = await client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<UserResponse>();
+        body.Should().NotBeNull();
+        body!.Id.Should().Be(ownerUserId);
+    }
 }
