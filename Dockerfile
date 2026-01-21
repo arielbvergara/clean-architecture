@@ -6,6 +6,11 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 
+# Install GSSAPI/Kerberos library required by Npgsql / PostgreSQL
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Use a non-privileged HTTP port inside the container
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
@@ -22,9 +27,9 @@ ENV UseInMemoryDB=true
 # Connection string for the real database when UseInMemoryDB=false.
 # This maps to configuration key "ConnectionStrings:DbContext" in ASP.NET Core,
 # so we use the double-underscore naming convention.
-# Example for SQL Server:
-#   Server=sqlserver;Database=CleanArchitectureDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True;
-ENV ConnectionStrings__DbContext="Server=sqlserver;Database=CleanArchitectureDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True;"
+# Example for PostgreSQL running as a service named 'postgres' in docker-compose:
+#   Host=postgres;Port=5432;Database=cleanarchitecture;Username=appuser;Password=devpassword;
+ENV ConnectionStrings__DbContext="Host=postgres;Port=5432;Database=cleanarchitecture;Username=appuser;Password=devpassword;"
 
 # =========================================================
 # 2) Build image (contains SDK and tooling)

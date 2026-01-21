@@ -17,7 +17,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
     public async Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
     {
         return await context.Set<User>()
-            .FirstOrDefaultAsync(u => u.Email.Value == email.Value, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
 
     public async Task<User?> GetByExternalAuthIdAsync(ExternalAuthIdentifier externalAuthId, CancellationToken cancellationToken = default)

@@ -18,14 +18,8 @@ public class UserControllerIntegrationTests : IClassFixture<WebApplicationFactor
         _client = factory
             .WithWebHostBuilder(builder =>
             {
-                builder.UseEnvironment("Development");
-                builder.ConfigureAppConfiguration((_, config) =>
-                {
-                    config.AddInMemoryCollection(new Dictionary<string, string?>
-                    {
-                        ["UseInMemoryDB"] = "true"
-                    });
-                });
+                // Use a dedicated Testing environment that Program.cs treats as always in-memory
+                builder.UseEnvironment("Testing");
             })
             .CreateClient();
     }
