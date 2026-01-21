@@ -27,8 +27,8 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         const string externalAuthId = "external-test-id";
         const string updatedName = "test modified";
 
-        // Authenticated user for the whole lifecycle
-        _client.DefaultRequestHeaders.Add("X-Test-ExternalId", externalAuthId);
+        // Authenticated user for the whole lifecycle (TEST-ONLY header, handled by TestAuthHandler)
+        _client.DefaultRequestHeaders.Add("X-Test-Only-ExternalId", externalAuthId);
 
         // 1) create a user
         var createRequest = new CreateUserRequest(email, name, externalAuthId);

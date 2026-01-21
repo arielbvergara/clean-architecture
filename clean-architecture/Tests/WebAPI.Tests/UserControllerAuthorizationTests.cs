@@ -25,7 +25,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         // Arrange
         var client = _factory.CreateClient();
 
-        // No X-Test-ExternalId header -> TestAuthHandler returns no identity -> 401 due to [Authorize].
+        // No X-Test-Only-ExternalId header -> TestAuthHandler returns no identity -> 401 due to [Authorize].
         var userId = Guid.NewGuid();
 
         // Act
@@ -59,7 +59,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         }
 
         var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{userId}");
-        request.Headers.Add("X-Test-ExternalId", externalId);
+        request.Headers.Add("X-Test-Only-ExternalId", externalId);
 
         // Act
         var response = await client.SendAsync(request);
@@ -103,7 +103,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         }
 
         var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{ownerUserId}");
-        request.Headers.Add("X-Test-ExternalId", attackerExternalId);
+        request.Headers.Add("X-Test-Only-ExternalId", attackerExternalId);
 
         // Act
         var response = await client.SendAsync(request);
@@ -144,8 +144,8 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         }
 
         var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{ownerUserId}");
-        request.Headers.Add("X-Test-ExternalId", adminExternalId);
-        request.Headers.Add("X-Test-Role", "Admin");
+        request.Headers.Add("X-Test-Only-ExternalId", adminExternalId);
+        request.Headers.Add("X-Test-Only-Role", "Admin");
 
         // Act
         var response = await client.SendAsync(request);

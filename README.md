@@ -52,11 +52,13 @@ For local development, you can leave `Authentication:Authority` / `Authenticatio
 
 The `WebAPI.Tests` project uses a lightweight test authentication handler (`TestAuthHandler`) wired via `CustomWebApplicationFactory`:
 
-- Requests that include an `X-Test-ExternalId` header are treated as authenticated, with the header value mapped to the `sub` claim.
+- **TEST-ONLY** headers are used to simulate identities and roles when running tests:
+  - `X-Test-Only-ExternalId` is mapped to the `sub` claim.
+  - `X-Test-Only-Role` (for example, `Admin`) is mapped to a role claim.
+- These headers are only honored inside the in-memory test host configured by `CustomWebApplicationFactory`; the real WebAPI uses JWT bearer tokens and ignores these headers entirely.
 - The application then maps this external identifier to the domain user via `ExternalAuthId` and `GetUserByExternalAuthIdUseCase`.
-- Optionally, you can add an `X-Test-Role` header (for example, `Admin`) to simulate role-based authorization.
 
-This setup allows integration tests to exercise authentication and record-ownership behavior without depending on a real identity provider.
+This setup allows integration tests to exercise authentication and record-ownership behavior without depending on a real identity provider, while keeping a clear separation from production authentication flows.
 
 ### Run with Docker Compose (PostgreSQL + WebAPI)
 

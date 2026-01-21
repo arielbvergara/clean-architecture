@@ -7,6 +7,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace WebAPI.Tests;
 
+/// <summary>
+/// TEST-ONLY WebApplicationFactory used by WebAPI.Tests to host the API in-memory.
+/// It overrides authentication with TestAuthHandler. DO NOT use this in production code paths.
+/// </summary>
 public class CustomWebApplicationFactory : WebApplicationFactory<WebAPI.Program>
 {
     protected override IHost CreateHost(IHostBuilder builder)
