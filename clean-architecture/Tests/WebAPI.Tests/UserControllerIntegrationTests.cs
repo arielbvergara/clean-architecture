@@ -9,19 +9,13 @@ using Xunit;
 
 namespace WebAPI.Tests;
 
-public class UserControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class UserControllerIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public UserControllerIntegrationTests(WebApplicationFactory<Program> factory)
+    public UserControllerIntegrationTests(CustomWebApplicationFactory factory)
     {
-        _client = factory
-            .WithWebHostBuilder(builder =>
-            {
-                // Use a dedicated Testing environment that Program.cs treats as always in-memory
-                builder.UseEnvironment("Testing");
-            })
-            .CreateClient();
+        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -32,6 +26,9 @@ public class UserControllerIntegrationTests : IClassFixture<WebApplicationFactor
         const string name = "test";
         const string externalAuthId = "external-test-id";
         const string updatedName = "test modified";
+
+        // Authenticated user for the whole lifecycle (TEST-ONLY header, handled by TestAuthHandler)
+        _client.DefaultRequestHeaders.Add("X-Test-Only-ExternalId", externalAuthId);
 
         // 1) create a user
         var createRequest = new CreateUserRequest(email, name, externalAuthId);

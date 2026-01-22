@@ -35,6 +35,31 @@ From the repository root:
 dotnet build clean-architecture.slnx
 ```
 
+### Authentication & Authorization
+
+The Web API is secured using ASP.NET Core authentication/authorization:
+
+- **JWT Bearer authentication** is configured in `clean-architecture/WebAPI/Program.cs`.
+- Configuration values are read from `clean-architecture/WebAPI/appsettings*.json` under the `Authentication` section:
+  - `Authentication:Authority` – the issuer/authority for JWT tokens (e.g., your OIDC / Entra ID authority URL).
+  - `Authentication:Audience` – the API audience / resource identifier expected in the token.
+- A **fallback authorization policy** requires all endpoints to be authenticated by default.
+- The `UserController` is decorated with `[Authorize]`, and additional ownership checks ensure that users can only access their own user record unless they are in an elevated role.
+
+For local development, you can leave `Authentication:Authority` / `Authentication:Audience` empty and use test-only authentication via the WebAPI tests. For real environments, configure these via appsettings and/or environment variables to match your identity provider.
+
+### Test authentication in `WebAPI.Tests`
+
+The `WebAPI.Tests` project uses a lightweight test authentication handler (`TestAuthHandler`) wired via `CustomWebApplicationFactory`:
+
+- **TEST-ONLY** headers are used to simulate identities and roles when running tests:
+  - `X-Test-Only-ExternalId` is mapped to the `sub` claim.
+  - `X-Test-Only-Role` (for example, `Admin`) is mapped to a role claim.
+- These headers are only honored inside the in-memory test host configured by `CustomWebApplicationFactory`; the real WebAPI uses JWT bearer tokens and ignores these headers entirely.
+- The application then maps this external identifier to the domain user via `ExternalAuthId` and `GetUserByExternalAuthIdUseCase`.
+
+This setup allows integration tests to exercise authentication and record-ownership behavior without depending on a real identity provider, while keeping a clear separation from production authentication flows.
+
 ### Run with Docker Compose (PostgreSQL + WebAPI)
 
 From the repository root, you can start the API and a PostgreSQL database using Docker Compose:
