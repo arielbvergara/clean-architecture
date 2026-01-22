@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Application.Interfaces;
 using Application.UseCases;
 using Infrastructure.Data;
@@ -19,8 +19,31 @@ public partial class Program
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        const string bearerSchemeId = "bearer";
 
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "CleanArchitecture API",
+                Version = "v1"
+            });
+
+            // Enable JWT bearer token support in Swagger UI
+            options.AddSecurityDefinition(bearerSchemeId, new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer", // lowercase per RFC 7235
+                BearerFormat = "JWT",
+                Description = "JWT Authorization header using the Bearer scheme. Paste only the JWT, without the 'Bearer ' prefix."
+            });
+
+            // Swashbuckle 10 / Microsoft.OpenApi v2+ expects a delegate here
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(bearerSchemeId, document)] = []
+            });
+        });
         // Repositories
         // Always use in-memory database for the Testing environment, regardless of configuration
         var useInMemoryDb = builder.Configuration.GetValue<bool>("UseInMemoryDB") ||

@@ -2,6 +2,8 @@
   <Folder Name="/ADRs/">
     <File Path="ADRs\001-use-microsoft-testing-platform-runner.md" />
     <File Path="ADRs\002-postgres-and-docker-compose.md" />
+    <File Path="ADRs\003-webapi-authentication-and-authorization-for-user-endpoints.md" />
+    <File Path="ADRs\004-firebase-authentication-and-identity-provider-abstraction.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".gitignore" />

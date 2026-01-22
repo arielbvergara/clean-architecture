@@ -2,21 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 using Application.Dtos.User;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace WebAPI.Tests;
 
-public class UserControllerIntegrationTests : IClassFixture<CustomWebApplicationFactory>
+public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
+    : IClassFixture<CustomWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public UserControllerIntegrationTests(CustomWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task UserLifecycle_ShouldCreateGetUpdateAndDeleteUser_WhenUsingUserEndpoints()
