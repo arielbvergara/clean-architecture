@@ -3,8 +3,7 @@ using Application.Interfaces;
 using Application.UseCases;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+using WebAPI.Authentication;
 using WebAPI.Filters;
 
 namespace WebAPI;
@@ -30,32 +29,7 @@ public partial class Program
         builder.Services.AddScoped<IUserRepository, UserRepository>();
 
         // Authentication & Authorization
-        var authority = builder.Configuration["Authentication:Authority"];
-        var audience = builder.Configuration["Authentication:Audience"];
-
-        builder.Services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                if (!string.IsNullOrWhiteSpace(authority))
-                {
-                    options.Authority = authority;
-                    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
-                }
-
-                if (!string.IsNullOrWhiteSpace(audience))
-                {
-                    options.Audience = audience;
-                }
-            });
-
-        builder.Services.AddAuthorization(options =>
-        {
-            // Require authenticated users by default for all endpoints.
-            options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
+        builder.Services.AddJwtAuthenticationAndAuthorization(builder.Configuration, builder.Environment);
 
         // Application use cases
         builder.Services.AddUseCases();
