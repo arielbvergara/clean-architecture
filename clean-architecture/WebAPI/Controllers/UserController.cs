@@ -306,6 +306,15 @@ public class UserController(
         };
     }
 
+    /// <summary>
+    /// Resolves the current authenticated user from the external auth identifier.
+    /// </summary>
+    /// <remarks>
+    /// This helper intentionally lives in <see cref="UserController"/> because its behavior is specific
+    /// to user-centric endpoints (e.g. <c>/me</c>) and their error semantics (404 vs 403).
+    /// If other controllers need similar behavior in the future, we can promote this to a shared
+    /// abstraction (e.g. base controller or ICurrentUser service) once the common requirements are clear.
+    /// </remarks>
     private async Task<(UserResponse? currentUser, IActionResult? errorResult)> GetCurrentUserAsync(
         CancellationToken cancellationToken)
     {
