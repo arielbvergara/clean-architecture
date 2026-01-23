@@ -31,6 +31,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 externalId => externalId.Value,
                 value => ExternalAuthIdentifier.Create(value));
 
+        // Simple scalar properties for role and soft-delete state.
+        builder.Property(u => u.Role)
+            .HasMaxLength(100);
+
+        builder.Property(u => u.IsDeleted);
+
+        builder.Property(u => u.DeletedAt);
+
         // // Seed data - values here are the underlying scalar column types
         // builder.HasData(
         //     new

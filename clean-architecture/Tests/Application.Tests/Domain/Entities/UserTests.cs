@@ -33,6 +33,52 @@ public class UserTests
 
         user.CreatedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
         user.UpdatedAt.Should().BeNull();
+
+        user.Role.Should().Be("User");
+        user.IsDeleted.Should().BeFalse();
+        user.DeletedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void MarkDeleted_ShouldSetSoftDeleteFields_WhenUserIsActive()
+    {
+        // Arrange
+        var email = Email.Create("user@example.com");
+        var name = UserName.Create("Test User");
+        var externalAuthId = ExternalAuthIdentifier.Create("provider|123");
+        var user = User.Create(email, name, externalAuthId);
+
+        var before = DateTime.UtcNow;
+
+        // Act
+        user.MarkDeleted();
+
+        var after = DateTime.UtcNow;
+
+        // Assert
+        user.IsDeleted.Should().BeTrue();
+        user.DeletedAt.Should().NotBeNull();
+        user.DeletedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
+    }
+
+    [Fact]
+    public void MarkDeleted_ShouldBeIdempotent_WhenCalledMultipleTimes()
+    {
+        // Arrange
+        var email = Email.Create("user@example.com");
+        var name = UserName.Create("Test User");
+        var externalAuthId = ExternalAuthIdentifier.Create("provider|123");
+        var user = User.Create(email, name, externalAuthId);
+
+        user.MarkDeleted();
+        var firstDeletedAt = user.DeletedAt;
+
+        // Act
+        user.MarkDeleted();
+
+        // Assert
+        user.IsDeleted.Should().BeTrue();
+        user.DeletedAt.Should().Be(firstDeletedAt);
     }
 
     [Fact]
