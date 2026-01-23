@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Application.Interfaces;
 using Application.UseCases;
@@ -80,13 +81,8 @@ public partial class Program
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
-        // if (app.Environment.IsDevelopment())
-        // {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        // }
-
+        app.UseSwagger();
+        app.UseSwaggerUI();
         app.UseHttpsRedirection();
 
         app.UseAuthentication();
@@ -94,19 +90,13 @@ public partial class Program
 
         app.MapControllers();
 
-        if (useInMemoryDb)
-        {
-            // Seed data. Use this config for in memory database
-            using var scope = app.Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        }
-        else
-        {
-            // Automatically create the database if it does not exist. This is required only for real database
-            using var scope = app.Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            context.Database.EnsureCreated(); // This creates the database if it doesn't exist
-        }
+
+        // Apply EF Core migrations for the real database. This replaces EnsureCreated so
+        // that schema changes (e.g., new columns for soft delete or roles) are handled
+        // via migrations instead of ad-hoc schema creation.
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
 
         app.Run();
     }
