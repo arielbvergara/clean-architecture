@@ -1,9 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using WebAPI.Authorization;
 
 namespace WebAPI.Authentication;
-
 /// <summary>
 /// Configures JWT Bearer authentication and authorization policies for the WebAPI host.
 ///
@@ -66,6 +66,9 @@ public static class JwtAuthenticationExtensions
                 options.TokenValidationParameters.RoleClaimType = "role";
             });
 
+        // Register custom authorization handlers.
+        services.AddScoped<IAuthorizationHandler, OwnsUserHandler>();
+
         services.AddAuthorization(options =>
         {
             // Require authenticated users by default for all endpoints. Individual endpoints
@@ -73,6 +76,18 @@ public static class JwtAuthenticationExtensions
             options.FallbackPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .Build();
+
+            // Policy for endpoints that should only be accessible to administrators.
+            options.AddPolicy("AdminOnly", policy =>
+                policy.RequireClaim("role", "admin"));
+
+            // Convenience policy for endpoints that simply require any authenticated user.
+            options.AddPolicy("User", policy =>
+                policy.RequireAuthenticatedUser());
+
+            // Policy that enforces that the caller owns the target user resource or is an admin.
+            options.AddPolicy("OwnsUser", policy =>
+                policy.Requirements.Add(new OwnsUserRequirement()));
         });
 
         return services;

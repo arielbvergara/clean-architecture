@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Dtos.User;
@@ -13,9 +12,9 @@ public class UserController(
     CreateUserUseCase createUserUseCase,
     GetUserByIdUseCase getUserByIdUseCase,
     GetUserByEmailUseCase getUserByEmailUseCase,
-    GetUserByExternalAuthIdUseCase getUserByExternalAuthIdUseCase,
     UpdateUserNameUseCase updateUserNameUseCase,
     DeleteUserUseCase deleteUserUseCase,
+    IAuthorizationService authorizationService,
     ILogger<UserController> logger)
     : ControllerBase
 {
@@ -51,10 +50,10 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
     {
-        var ownershipCheck = await AuthorizeCurrentUserForResourceAsync(id, cancellationToken);
-        if (ownershipCheck is not null)
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        if (!authorizationResult.Succeeded)
         {
-            return ownershipCheck;
+            return Forbid();
         }
 
         var result = await getUserByIdUseCase.ExecuteAsync(new GetUserByIdRequest(id), cancellationToken);
@@ -93,10 +92,10 @@ public class UserController(
 
         var user = result.Value!;
 
-        var ownershipCheck = await AuthorizeCurrentUserForResourceAsync(user.Id, cancellationToken);
-        if (ownershipCheck is not null)
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, user.Id, "OwnsUser");
+        if (!authorizationResult.Succeeded)
         {
-            return ownershipCheck;
+            return Forbid();
         }
 
         return Ok(user);
@@ -110,10 +109,10 @@ public class UserController(
     public async Task<IActionResult> UpdateUserName(Guid id, [FromBody] UpdateUserNameDto dto,
         CancellationToken cancellationToken)
     {
-        var ownershipCheck = await AuthorizeCurrentUserForResourceAsync(id, cancellationToken);
-        if (ownershipCheck is not null)
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        if (!authorizationResult.Succeeded)
         {
-            return ownershipCheck;
+            return Forbid();
         }
 
         var result =
@@ -140,10 +139,10 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
     {
-        var ownershipCheck = await AuthorizeCurrentUserForResourceAsync(id, cancellationToken);
-        if (ownershipCheck is not null)
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        if (!authorizationResult.Succeeded)
         {
-            return ownershipCheck;
+            return Forbid();
         }
 
         var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(id), cancellationToken);
@@ -161,45 +160,4 @@ public class UserController(
         };
     }
 
-    private async Task<IActionResult?> AuthorizeCurrentUserForResourceAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var externalAuthId = GetExternalAuthIdFromClaims();
-        if (externalAuthId is null)
-        {
-            logger.LogWarning("Authenticated principal is missing external auth identifier claim.");
-            return Forbid();
-        }
-
-        var currentUserResult = await getUserByExternalAuthIdUseCase.ExecuteAsync(
-            new GetUserByExternalAuthIdRequest(externalAuthId),
-            cancellationToken);
-
-        if (currentUserResult.IsFailure)
-        {
-            var error = currentUserResult.Error!;
-            logger.LogError(error.InnerException, "Failed to resolve current user from external auth ID: {Message}",
-                error.Message);
-
-            return error switch
-            {
-                Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                _ => Forbid()
-            };
-        }
-
-        var currentUser = currentUserResult.Value!;
-
-        if (currentUser.Id != userId && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
-
-        return null;
-    }
-
-    private string? GetExternalAuthIdFromClaims()
-    {
-        // Prefer OpenID Connect 'sub' claim, fall back to NameIdentifier if present.
-        return User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    }
 }

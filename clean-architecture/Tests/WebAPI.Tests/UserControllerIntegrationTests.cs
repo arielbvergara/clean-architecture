@@ -76,8 +76,9 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         var deleteResponse = await _client.DeleteAsync($"/api/User/{userId}");
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        // verify user is deleted
+        // verify user is deleted. After the delete, the current principal can no longer
+        // be resolved to a user record, so authorization fails closed with 403.
         var getAfterDeleteResponse = await _client.GetAsync($"/api/User/{userId}");
-        getAfterDeleteResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        getAfterDeleteResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }
