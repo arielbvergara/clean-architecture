@@ -19,6 +19,9 @@ public class UserController(
     ILogger<UserController> logger)
     : ControllerBase
 {
+    // User creation is intentionally anonymous to allow initial provisioning of a user record
+    // for a newly authenticated identity. Ownership and further operations still require auth.
+    [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

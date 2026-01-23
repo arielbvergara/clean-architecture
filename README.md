@@ -46,7 +46,31 @@ The Web API is secured using ASP.NET Core authentication/authorization:
 - A **fallback authorization policy** requires all endpoints to be authenticated by default.
 - The `UserController` is decorated with `[Authorize]`, and additional ownership checks ensure that users can only access their own user record unless they are in an elevated role.
 
-For local development, you can leave `Authentication:Authority` / `Authentication:Audience` empty and use test-only authentication via the WebAPI tests. For real environments, configure these via appsettings and/or environment variables to match your identity provider.
+For local development, you can:
+
+- Use real JWTs from an identity provider (for example, Firebase Authentication) and configure `Authentication:Authority` / `Authentication:Audience` accordingly.
+- Or use test-only authentication via the WebAPI tests (see below) without hitting a real IdP.
+
+### Using Firebase Authentication (email/password)
+
+This project can be used with Firebase Authentication as the identity provider. For the Firebase project `clean-architecture-ariel`:
+
+- Set in `clean-architecture/WebAPI/appsettings.Development.json`:
+  - `Authentication:Authority = "https://securetoken.google.com/clean-architecture-ariel"`
+  - `Authentication:Audience = "clean-architecture-ariel"`
+- On the client side (or in Postman), obtain a Firebase **ID token** for an authenticated user and send it as:
+  - `Authorization: Bearer <firebase-id-token>`
+- When creating the domain user via `POST /api/User`, use the Firebase UID (the `sub` claim from the token) as `externalAuthId`:
+
+```json
+{
+  "email": "user@example.com",
+  "name": "User Name",
+  "externalAuthId": "<firebase-uid-from-token-sub>"
+}
+```
+
+The WebAPI uses the `sub` claim to resolve the current user and enforce record ownership, so this mapping keeps authentication and authorization aligned.
 
 ### Test authentication in `WebAPI.Tests`
 

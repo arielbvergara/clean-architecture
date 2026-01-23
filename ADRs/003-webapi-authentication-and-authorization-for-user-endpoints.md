@@ -46,7 +46,7 @@ We decided to:
 
 3. **Secure `UserController` with ASP.NET Core authorization attributes**
    - Add `[Authorize]` at the controller level so that all current actions under `UserController` require authentication.
-   - Do **not** mark any existing endpoints as `[AllowAnonymous]`; all user operations (create/read/update/delete) are considered sensitive.
+   - Do **not** mark any existing endpoints as `[AllowAnonymous]`; all user operations (read/update/delete) except "create" are considered sensitive.
 
 4. **Enforce record ownership using `ExternalAuthId`**
    - The `Domain.Entities.User` entity already includes an `ExternalAuthId` value object and there is a `GetUserByExternalAuthIdUseCase` in the Application layer.
