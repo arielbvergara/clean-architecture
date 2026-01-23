@@ -53,7 +53,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
             return;
         }
 
-        context.Set<User>().Remove(user);
+        user.MarkDeleted();
         await context.SaveChangesAsync(cancellationToken);
     }
 

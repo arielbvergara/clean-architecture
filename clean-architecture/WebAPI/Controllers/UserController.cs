@@ -20,6 +20,7 @@ public class UserController(
     CreateUserUseCase createUserUseCase,
     GetUserByIdUseCase getUserByIdUseCase,
     GetUserByEmailUseCase getUserByEmailUseCase,
+    GetUserByExternalAuthIdUseCase getUserByExternalAuthIdUseCase,
     UpdateUserNameUseCase updateUserNameUseCase,
     DeleteUserUseCase deleteUserUseCase,
     IAuthorizationService authorizationService,
