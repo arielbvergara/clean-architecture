@@ -56,10 +56,4 @@ public class UserRepository(AppDbContext context) : IUserRepository
         user.MarkDeleted();
         await context.SaveChangesAsync(cancellationToken);
     }
-
-    public async Task<bool> ExistsAsync(UserId id, CancellationToken cancellationToken = default)
-    {
-        return await context.Set<User>()
-            .AnyAsync(u => u.Id == id, cancellationToken);
-    }
 }
