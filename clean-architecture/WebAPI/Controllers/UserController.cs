@@ -159,6 +159,13 @@ public class UserController(
         };
     }
 
+    /// <summary>
+    /// Gets a user by internal identifier.
+    /// </summary>
+    /// <remarks>
+    /// Normal users can only access their own user id. Administrators can access
+    /// any user. Access is enforced via authorization and ownership checks.
+    /// </remarks>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -186,6 +193,14 @@ public class UserController(
             });
     }
 
+    /// <summary>
+    /// Gets a user by email address.
+    /// </summary>
+    /// <remarks>
+    /// After resolving the user by email, the same ownership and admin rules
+    /// as the id-based endpoint are applied. Normal users can only retrieve
+    /// their own record; administrators can retrieve any user.
+    /// </remarks>
     [HttpGet("email/{email}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -216,6 +231,13 @@ public class UserController(
         return Ok(user);
     }
 
+    /// <summary>
+    /// Updates the display name of a user identified by id.
+    /// </summary>
+    /// <remarks>
+    /// Normal users can only update their own name. Administrators can update
+    /// the name of any user, subject to authorization policies.
+    /// </remarks>
     [HttpPut("{id:guid}/name")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -247,6 +269,13 @@ public class UserController(
             });
     }
 
+    /// <summary>
+    /// Deletes a user identified by id.
+    /// </summary>
+    /// <remarks>
+    /// Normal users can only delete their own account. Administrators can delete
+    /// any user, subject to authorization policies.
+    /// </remarks>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
