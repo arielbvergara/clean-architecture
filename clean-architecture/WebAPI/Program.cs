@@ -10,7 +10,7 @@ using WebAPI.Filters;
 
 namespace WebAPI;
 
-public partial class Program
+public class Program
 {
     public static void Main(string[] args)
     {

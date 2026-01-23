@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Dtos.User;
 using Application.UseCases.User;
+using WebAPI.Authorization;
 
 namespace WebAPI.Controllers;
 
@@ -308,7 +309,7 @@ public class UserController(
     private async Task<(UserResponse? currentUser, IActionResult? errorResult)> GetCurrentUserAsync(
         CancellationToken cancellationToken)
     {
-        var externalAuthId = GetExternalAuthIdFromClaims();
+        var externalAuthId = User.GetExternalAuthId();
         if (externalAuthId is null)
         {
             logger.LogWarning("Authenticated principal is missing external auth identifier claim.");
@@ -335,11 +336,5 @@ public class UserController(
         }
 
         return (currentUserResult.Value!, null);
-    }
-
-    private string? GetExternalAuthIdFromClaims()
-    {
-        // Prefer OpenID Connect 'sub' claim, fall back to NameIdentifier if present.
-        return User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     }
 }

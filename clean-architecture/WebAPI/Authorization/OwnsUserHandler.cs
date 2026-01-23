@@ -30,13 +30,13 @@ public sealed class OwnsUserHandler(
         }
 
         // Administrators are allowed to operate on any user resource.
-        if (IsAdmin(context.User))
+        if (context.User.IsAdmin())
         {
             context.Succeed(requirement);
             return;
         }
 
-        var externalAuthId = GetExternalAuthId(context.User);
+        var externalAuthId = context.User.GetExternalAuthId();
         if (string.IsNullOrWhiteSpace(externalAuthId))
         {
             logger.LogWarning("Authorization failed: missing external auth identifier claim for principal {Name}",
@@ -62,25 +62,5 @@ public sealed class OwnsUserHandler(
         {
             context.Succeed(requirement);
         }
-    }
-
-    private static bool IsAdmin(ClaimsPrincipal user)
-    {
-        // Support both the standard role-based approach and the Firebase-style custom claim
-        // so that tests (which use ClaimTypes.Role) and production tokens (which use "role")
-        // are both recognized.
-        if (user.IsInRole("Admin") || user.IsInRole("admin"))
-        {
-            return true;
-        }
-
-        var roleClaim = user.FindFirst("role")?.Value;
-        return string.Equals(roleClaim, "admin", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string? GetExternalAuthId(ClaimsPrincipal user)
-    {
-        // Prefer OpenID Connect 'sub' claim, fall back to NameIdentifier if present.
-        return user.FindFirst("sub")?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     }
 }
