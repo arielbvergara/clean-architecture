@@ -4,6 +4,8 @@
     <File Path="ADRs\002-postgres-and-docker-compose.md" />
     <File Path="ADRs\003-webapi-authentication-and-authorization-for-user-endpoints.md" />
     <File Path="ADRs\004-firebase-authentication-and-identity-provider-abstraction.md" />
+    <File Path="ADRs\005-webapi-auth-refinements-jwt-policies-me-endpoints.md" />
+    <File Path="ADRs\006-user-role-and-soft-delete-lifecycle.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".gitignore" />
