@@ -20,6 +20,17 @@ This repository contains a layered .NET 10.0 Web API implementing a simple user 
 - `clean-architecture/Tests` – Test projects:
    - `Application.Tests`, `Infrastructure.Tests`, `WebAPI.Tests` using xUnit and Microsoft Testing Platform.
 
+## Architecture Decision Records (ADRs)
+
+Architecture decisions are documented under the `ADRs/` directory. Key ADRs related to authentication, authorization, and user lifecycle:
+
+- `001-use-microsoft-testing-platform-runner.md` – adopt Microsoft Testing Platform as the test runner.
+- `002-postgres-and-docker-compose.md` – configure PostgreSQL and Docker Compose for local development.
+- `003-webapi-authentication-and-authorization-for-user-endpoints.md` – initial WebAPI authZ model for `UserController`.
+- `004-firebase-authentication-and-identity-provider-abstraction.md` – introduce a WebAPI-only JWT abstraction and configure Firebase as the default IdP.
+- `005-webapi-auth-refinements-jwt-policies-me-endpoints.md` – refine JWT config for Firebase, add policies/OwnsUser handler, and introduce `/me` endpoints and failure-path tests.
+- `006-user-role-and-soft-delete-lifecycle.md` – add `Role`, `IsDeleted`, `DeletedAt` to `User` and switch to soft delete with a global query filter.
+
 ## Getting Started
 
 ### Prerequisites
