@@ -90,8 +90,9 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         var getAfterDeleteMeResponse = await _client.GetAsync("/api/User/me");
         getAfterDeleteMeResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
-        // and direct access by id should also return 404
+        // direct access by id should now be forbidden because the current principal can no longer
+        // be resolved to a user record and the OwnsUser policy fails closed.
         var getAfterDeleteByIdResponse = await _client.GetAsync($"/api/User/{userId}");
-        getAfterDeleteByIdResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        getAfterDeleteByIdResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }
