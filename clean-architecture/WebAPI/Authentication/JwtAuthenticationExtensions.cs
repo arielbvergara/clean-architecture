@@ -9,6 +9,11 @@ namespace WebAPI.Authentication;
 ///
 /// This is intentionally kept in the WebAPI layer so that the choice of identity provider
 /// (Firebase, Entra ID, Auth0, etc.) can be changed without impacting Domain/Application.
+///
+/// In the current setup, Firebase Authentication is the primary identity provider. Tokens are
+/// validated strictly against the configured Firebase project (issuer/audience), and the
+/// custom claim "role" is surfaced as the ASP.NET Core role claim so that
+/// User.IsInRole / [Authorize(Roles = "...")] behave as expected.
 /// </summary>
 public static class JwtAuthenticationExtensions
 {
@@ -52,7 +57,13 @@ public static class JwtAuthenticationExtensions
                     options.RequireHttpsMetadata = !environment.IsDevelopment();
                 }
 
+                // Enforce token lifetime with a small clock skew to avoid overly long reuse windows.
                 options.TokenValidationParameters.ValidateLifetime = true;
+                options.TokenValidationParameters.ClockSkew = TimeSpan.FromMinutes(2);
+
+                // Map Firebase custom claim "role" into ASP.NET Core's role system so that
+                // User.IsInRole("admin") and [Authorize(Roles = "admin")] work as expected.
+                options.TokenValidationParameters.RoleClaimType = "role";
             });
 
         services.AddAuthorization(options =>
