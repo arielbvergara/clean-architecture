@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Dtos.User;
 using Application.UseCases.User;
+using WebAPI.Authorization;
 
 namespace WebAPI.Controllers;
 
@@ -173,7 +174,7 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -223,7 +224,7 @@ public class UserController(
 
         var user = result.Value!;
 
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, user.Id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, user.Id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -247,7 +248,7 @@ public class UserController(
     public async Task<IActionResult> UpdateUserName(Guid id, [FromBody] UpdateUserNameDto dto,
         CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -284,7 +285,7 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -305,10 +306,19 @@ public class UserController(
         };
     }
 
+    /// <summary>
+    /// Resolves the current authenticated user from the external auth identifier.
+    /// </summary>
+    /// <remarks>
+    /// This helper intentionally lives in <see cref="UserController"/> because its behavior is specific
+    /// to user-centric endpoints (e.g. <c>/me</c>) and their error semantics (404 vs 403).
+    /// If other controllers need similar behavior in the future, we can promote this to a shared
+    /// abstraction (e.g. base controller or ICurrentUser service) once the common requirements are clear.
+    /// </remarks>
     private async Task<(UserResponse? currentUser, IActionResult? errorResult)> GetCurrentUserAsync(
         CancellationToken cancellationToken)
     {
-        var externalAuthId = GetExternalAuthIdFromClaims();
+        var externalAuthId = User.GetExternalAuthId();
         if (externalAuthId is null)
         {
             logger.LogWarning("Authenticated principal is missing external auth identifier claim.");
@@ -335,11 +345,5 @@ public class UserController(
         }
 
         return (currentUserResult.Value!, null);
-    }
-
-    private string? GetExternalAuthIdFromClaims()
-    {
-        // Prefer OpenID Connect 'sub' claim, fall back to NameIdentifier if present.
-        return User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     }
 }

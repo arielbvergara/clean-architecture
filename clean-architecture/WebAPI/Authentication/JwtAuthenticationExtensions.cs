@@ -78,15 +78,15 @@ public static class JwtAuthenticationExtensions
                 .Build();
 
             // Policy for endpoints that should only be accessible to administrators.
-            options.AddPolicy("AdminOnly", policy =>
+            options.AddPolicy(AuthorizationPoliciesConstants.AdminOnly, policy =>
                 policy.RequireClaim("role", "admin"));
 
             // Convenience policy for endpoints that simply require any authenticated user.
-            options.AddPolicy("User", policy =>
+            options.AddPolicy(AuthorizationPoliciesConstants.User, policy =>
                 policy.RequireAuthenticatedUser());
 
             // Policy that enforces that the caller owns the target user resource or is an admin.
-            options.AddPolicy("OwnsUser", policy =>
+            options.AddPolicy(AuthorizationPoliciesConstants.OwnsUser, policy =>
                 policy.Requirements.Add(new OwnsUserRequirement()));
         });
 

@@ -10,7 +10,7 @@ using WebAPI.Filters;
 
 namespace WebAPI;
 
-public partial class Program
+public class Program
 {
     public static void Main(string[] args)
     {
@@ -21,7 +21,7 @@ public partial class Program
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        const string bearerSchemeId = "bearer";
+        const string bearerSchemeId = "bearer"; // lowercase per RFC 7235
 
         builder.Services.AddSwaggerGen(options =>
         {
@@ -40,7 +40,7 @@ public partial class Program
             options.AddSecurityDefinition(bearerSchemeId, new OpenApiSecurityScheme
             {
                 Type = SecuritySchemeType.Http,
-                Scheme = "bearer", // lowercase per RFC 7235
+                Scheme = bearerSchemeId,
                 BearerFormat = "JWT",
                 Description = "JWT Authorization header using the Bearer scheme. Paste only the JWT, without the 'Bearer ' prefix."
             });
@@ -81,22 +81,29 @@ public partial class Program
 
         var app = builder.Build();
 
+        //Swagger
         app.UseSwagger();
         app.UseSwaggerUI();
-        app.UseHttpsRedirection();
 
+        // Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.UseHttpsRedirection();
         app.MapControllers();
 
-
-        // Apply EF Core migrations for the real database. This replaces EnsureCreated so
-        // that schema changes (e.g., new columns for soft delete or roles) are handled
-        // via migrations instead of ad-hoc schema creation.
+        // Apply EF Core migrations for relational database providers only. This replaces
+        // EnsureCreated so that schema changes (e.g., new columns for soft delete or roles)
+        // are handled via migrations instead of ad-hoc schema creation.
+        //
+        // In tests and other scenarios that use the in-memory provider, calling Migrate()
+        // would throw (relational-only API). Guard against that by checking IsRelational().
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        context.Database.Migrate();
+        if (context.Database.IsRelational())
+        {
+            context.Database.Migrate();
+        }
 
         app.Run();
     }
