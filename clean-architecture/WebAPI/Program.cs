@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.OpenApi;
 using Application.Interfaces;
 using Application.UseCases;
@@ -28,6 +29,11 @@ public partial class Program
                 Title = "CleanArchitecture API",
                 Version = "v1"
             });
+
+            // Include XML documentation comments so controller and action summaries
+            // and remarks appear in the generated OpenAPI spec and Swagger UI.
+            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 
             // Enable JWT bearer token support in Swagger UI
             options.AddSecurityDefinition(bearerSchemeId, new OpenApiSecurityScheme

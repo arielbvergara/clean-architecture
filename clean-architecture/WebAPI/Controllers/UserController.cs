@@ -6,6 +6,13 @@ using Application.UseCases.User;
 
 namespace WebAPI.Controllers;
 
+/// <summary>
+/// Exposes user management and self-service endpoints.
+///
+/// Includes `/api/User/me` operations that act on the current authenticated user,
+/// as well as id- and email-based endpoints that are protected by ownership and
+/// admin authorization policies.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -21,6 +28,14 @@ public class UserController(
 {
     // User creation is intentionally anonymous to allow initial provisioning of a user record
     // for a newly authenticated identity. Ownership and further operations still require auth.
+    /// <summary>
+    /// Creates a new user record for the given external identity.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is typically called once after a user has authenticated with the external
+    /// identity provider (for example, Firebase). The <c>externalAuthId</c> should match the
+    /// subject/UID from the access token used by that provider.
+    /// </remarks>
     [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -45,6 +60,13 @@ public class UserController(
             });
     }
 
+    /// <summary>
+    /// Gets the profile of the current authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// The user is resolved from the external authentication identifier (for example, the
+    /// Firebase UID in the JWT <c>sub</c> claim). Clients do not need to provide an id or email.
+    /// </remarks>
     [HttpGet("me")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -61,6 +83,13 @@ public class UserController(
         return Ok(currentUser);
     }
 
+    /// <summary>
+    /// Updates the display name of the current authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// The target user is derived from the access token. This endpoint cannot be used to
+    /// update another user's name; administrators should use the id-based endpoints instead.
+    /// </remarks>
     [HttpPut("me/name")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -94,6 +123,13 @@ public class UserController(
             });
     }
 
+    /// <summary>
+    /// Deletes the current authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// The user to delete is determined from the caller's access token. This endpoint is
+    /// intended for self-service account removal scenarios.
+    /// </remarks>
     [HttpDelete("me")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
