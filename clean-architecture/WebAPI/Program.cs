@@ -92,12 +92,18 @@ public class Program
         app.UseHttpsRedirection();
         app.MapControllers();
 
-        // Apply EF Core migrations for the real database. This replaces EnsureCreated so
-        // that schema changes (e.g., new columns for soft delete or roles) are handled
-        // via migrations instead of ad-hoc schema creation.
+        // Apply EF Core migrations for relational database providers only. This replaces
+        // EnsureCreated so that schema changes (e.g., new columns for soft delete or roles)
+        // are handled via migrations instead of ad-hoc schema creation.
+        //
+        // In tests and other scenarios that use the in-memory provider, calling Migrate()
+        // would throw (relational-only API). Guard against that by checking IsRelational().
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        context.Database.Migrate();
+        if (context.Database.IsRelational())
+        {
+            context.Database.Migrate();
+        }
 
         app.Run();
     }
