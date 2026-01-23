@@ -191,5 +191,7 @@ healthchecksdb
 *.exe
 /logs/
 /logs
-
 .DS_Store
+# Ignore accidental Windows-style output dirs that show up on Unix as literal names
+**/bin\\Debug/
+**/bin\\Release/
