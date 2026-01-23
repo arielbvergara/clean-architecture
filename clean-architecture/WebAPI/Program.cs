@@ -22,6 +22,9 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         const string bearerSchemeId = "bearer"; // lowercase per RFC 7235
+        const string clientAppCorsPolicyName = "ClientAppCorsPolicy";
+        const string clientAppConfigSection = "ClientApp";
+        const string clientAppOriginConfigKey = "Origin";
 
         builder.Services.AddSwaggerGen(options =>
         {
@@ -51,6 +54,27 @@ public class Program
                 [new OpenApiSecuritySchemeReference(bearerSchemeId, document)] = []
             });
         });
+
+        var clientAppOrigin = builder.Configuration.GetSection(clientAppConfigSection)[clientAppOriginConfigKey];
+
+        if (string.IsNullOrWhiteSpace(clientAppOrigin))
+        {
+            throw new InvalidOperationException(
+                $"Client app origin configuration '{clientAppConfigSection}:{clientAppOriginConfigKey}' is missing.");
+        }
+
+        // CORS for frontend client
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(clientAppCorsPolicyName, policyBuilder =>
+            {
+                policyBuilder
+                    .WithOrigins(clientAppOrigin)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+
         // Repositories
         // Always use in-memory database for the Testing environment, regardless of configuration
         var useInMemoryDb = builder.Configuration.GetValue<bool>("UseInMemoryDB") ||
@@ -85,11 +109,16 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI();
 
+        app.UseHttpsRedirection();
+
+        // CORS must run before authentication/authorization so that preflight
+        // and actual requests receive the proper headers.
+        app.UseCors(clientAppCorsPolicyName);
+
         // Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseHttpsRedirection();
         app.MapControllers();
 
         // Apply EF Core migrations for relational database providers only. This replaces
