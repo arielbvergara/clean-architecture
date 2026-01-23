@@ -21,7 +21,7 @@ public class Program
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        const string bearerSchemeId = "bearer";
+        const string bearerSchemeId = "bearer"; // lowercase per RFC 7235
 
         builder.Services.AddSwaggerGen(options =>
         {
@@ -40,7 +40,7 @@ public class Program
             options.AddSecurityDefinition(bearerSchemeId, new OpenApiSecurityScheme
             {
                 Type = SecuritySchemeType.Http,
-                Scheme = "bearer", // lowercase per RFC 7235
+                Scheme = bearerSchemeId,
                 BearerFormat = "JWT",
                 Description = "JWT Authorization header using the Bearer scheme. Paste only the JWT, without the 'Bearer ' prefix."
             });
@@ -81,15 +81,16 @@ public class Program
 
         var app = builder.Build();
 
+        //Swagger
         app.UseSwagger();
         app.UseSwaggerUI();
-        app.UseHttpsRedirection();
 
+        // Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.UseHttpsRedirection();
         app.MapControllers();
-
 
         // Apply EF Core migrations for the real database. This replaces EnsureCreated so
         // that schema changes (e.g., new columns for soft delete or roles) are handled

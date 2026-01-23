@@ -174,7 +174,7 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -224,7 +224,7 @@ public class UserController(
 
         var user = result.Value!;
 
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, user.Id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, user.Id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -248,7 +248,7 @@ public class UserController(
     public async Task<IActionResult> UpdateUserName(Guid id, [FromBody] UpdateUserNameDto dto,
         CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -285,7 +285,7 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, "OwnsUser");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
