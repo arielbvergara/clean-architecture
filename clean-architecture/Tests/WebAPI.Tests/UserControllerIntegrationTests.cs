@@ -45,7 +45,17 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         userByEmail!.Id.Should().Be(userId);
         userByEmail.Email.Should().Be(email);
 
-        // 3) get user by id
+        // 3) get current user via /me
+        var getMeResponse = await _client.GetAsync("/api/User/me");
+        getMeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var meUser = await getMeResponse.Content.ReadFromJsonAsync<UserResponse>();
+        meUser.Should().NotBeNull();
+        meUser!.Id.Should().Be(userId);
+        meUser.Email.Should().Be(email);
+        meUser.Name.Should().Be(name);
+
+        // 4) get user by id
         var getByIdResponse = await _client.GetAsync($"/api/User/{userId}");
         getByIdResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -54,31 +64,34 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         userById!.Email.Should().Be(email);
         userById.Name.Should().Be(name);
 
-        // 4) modify the user's name (to "test modified")
+        // 5) modify the user's name (to "test modified") via /me
         var updateBody = new UpdateUserNameDto(updatedName);
 
-        var updateResponse = await _client.PutAsJsonAsync($"/api/User/{userId}/name", updateBody);
+        var updateResponse = await _client.PutAsJsonAsync("/api/User/me/name", updateBody);
         updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var updatedUser = await updateResponse.Content.ReadFromJsonAsync<UserResponse>();
         updatedUser.Should().NotBeNull();
         updatedUser!.Name.Should().Be(updatedName);
 
-        // 5) get user by id and check name was modified
-        var getAfterUpdateResponse = await _client.GetAsync($"/api/User/{userId}");
+        // 6) get current user via /me and check name was modified
+        var getAfterUpdateResponse = await _client.GetAsync("/api/User/me");
         getAfterUpdateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var userAfterUpdate = await getAfterUpdateResponse.Content.ReadFromJsonAsync<UserResponse>();
         userAfterUpdate.Should().NotBeNull();
         userAfterUpdate!.Name.Should().Be(updatedName);
 
-        // 6) delete the user by id
-        var deleteResponse = await _client.DeleteAsync($"/api/User/{userId}");
+        // 7) delete the current user via /me
+        var deleteResponse = await _client.DeleteAsync("/api/User/me");
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        // verify user is deleted. After the delete, the current principal can no longer
-        // be resolved to a user record, so authorization fails closed with 403.
-        var getAfterDeleteResponse = await _client.GetAsync($"/api/User/{userId}");
-        getAfterDeleteResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        // verify user is deleted: /me should now fail with 404 (current user no longer resolvable)
+        var getAfterDeleteMeResponse = await _client.GetAsync("/api/User/me");
+        getAfterDeleteMeResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        // and direct access by id should also return 404
+        var getAfterDeleteByIdResponse = await _client.GetAsync($"/api/User/{userId}");
+        getAfterDeleteByIdResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }

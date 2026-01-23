@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Dtos.User;
@@ -42,6 +43,84 @@ public class UserController(
                     _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
                 };
             });
+    }
+
+    [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
+    {
+        var (currentUser, errorResult) = await GetCurrentUserAsync(cancellationToken);
+        if (errorResult is not null)
+        {
+            return errorResult;
+        }
+
+        return Ok(currentUser);
+    }
+
+    [HttpPut("me/name")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateMyName([FromBody] UpdateUserNameDto dto, CancellationToken cancellationToken)
+    {
+        var (currentUser, errorResult) = await GetCurrentUserAsync(cancellationToken);
+        if (errorResult is not null)
+        {
+            return errorResult;
+        }
+
+        var result = await updateUserNameUseCase.ExecuteAsync(
+            new UpdateUserNameRequest(currentUser!.Id, dto.NewName),
+            cancellationToken);
+
+        return result.Match(
+            onSuccess: user => Ok(user),
+            onFailure: error =>
+            {
+                logger.LogError(error.InnerException, "Failed to update current user name: {Message}",
+                    error.Message);
+                return error switch
+                {
+                    Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
+                    Application.Exceptions.ValidationException => BadRequest(new { error.Message }),
+                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
+                };
+            });
+    }
+
+    [HttpDelete("me")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken)
+    {
+        var (currentUser, errorResult) = await GetCurrentUserAsync(cancellationToken);
+        if (errorResult is not null)
+        {
+            return errorResult;
+        }
+
+        var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(currentUser!.Id), cancellationToken);
+
+        if (result.IsSuccess)
+            return NoContent();
+
+        var error = result.Error!;
+        logger.LogError(error.InnerException, "Failed to delete current user: {Message}", error.Message);
+        return error switch
+        {
+            Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
+            Application.Exceptions.ConflictException => Conflict(new { error.Message }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
+        };
     }
 
     [HttpGet("{id:guid}")]
@@ -160,4 +239,41 @@ public class UserController(
         };
     }
 
+    private async Task<(UserResponse? currentUser, IActionResult? errorResult)> GetCurrentUserAsync(
+        CancellationToken cancellationToken)
+    {
+        var externalAuthId = GetExternalAuthIdFromClaims();
+        if (externalAuthId is null)
+        {
+            logger.LogWarning("Authenticated principal is missing external auth identifier claim.");
+            return (null, Forbid());
+        }
+
+        var currentUserResult = await getUserByExternalAuthIdUseCase.ExecuteAsync(
+            new GetUserByExternalAuthIdRequest(externalAuthId),
+            cancellationToken);
+
+        if (currentUserResult.IsFailure)
+        {
+            var error = currentUserResult.Error!;
+            logger.LogError(error.InnerException, "Failed to resolve current user from external auth ID: {Message}",
+                error.Message);
+
+            IActionResult actionResult = error switch
+            {
+                Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
+                _ => Forbid()
+            };
+
+            return (null, actionResult);
+        }
+
+        return (currentUserResult.Value!, null);
+    }
+
+    private string? GetExternalAuthIdFromClaims()
+    {
+        // Prefer OpenID Connect 'sub' claim, fall back to NameIdentifier if present.
+        return User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
 }
