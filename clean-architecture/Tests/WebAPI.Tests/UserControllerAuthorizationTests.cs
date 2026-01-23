@@ -156,4 +156,59 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         body.Should().NotBeNull();
         body!.Id.Should().Be(ownerUserId);
     }
+
+    [Fact]
+    public async Task GetMe_ShouldReturnNotFound_WhenCurrentUserRecordDoesNotExist()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        const string externalId = "nonexistent-user-external-id";
+
+        // No user is seeded for this external id. The controller should fail closed without
+        // leaking internal details and respond with 404 for the /me endpoint.
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/User/me");
+        request.Headers.Add("X-Test-Only-ExternalId", externalId);
+
+        // Act
+        var response = await client.SendAsync(request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetUserById_ShouldReturnForbidden_WhenPrincipalHasNoBackingUserRecord()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        const string externalId = "nonexistent-user-external-id";
+
+        // Create a target user that is not associated with the current principal's external id.
+        Guid targetUserId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var email = Email.Create("target@example.com");
+            var userName = UserName.Create("Target User");
+            var extId = ExternalAuthIdentifier.Create("some-other-external-id");
+
+            var user = User.Create(email, userName, extId);
+            context.Users.Add(user);
+            await context.SaveChangesAsync(CancellationToken.None);
+
+            targetUserId = user.Id.Value;
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{targetUserId}");
+        request.Headers.Add("X-Test-Only-ExternalId", externalId);
+
+        // Act
+        var response = await client.SendAsync(request);
+
+        // Assert
+        // The OwnsUser policy should fail closed with 403, without throwing or leaking
+        // internal exception details to the client.
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
 }
