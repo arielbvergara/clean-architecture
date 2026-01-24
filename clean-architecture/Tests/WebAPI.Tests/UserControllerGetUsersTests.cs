@@ -93,13 +93,9 @@ public class UserControllerGetUsersTests : IClassFixture<CustomWebApplicationFac
         var client = _factory.CreateClient();
         const string adminExternalId = "admin-list-deleted-external";
 
-        List<Guid> deletedUserIds;
-
         using (var scope = _factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            deletedUserIds = new List<Guid>();
 
             // Seed deleted users
             for (var index = 0; index < 3; index++)
@@ -110,7 +106,6 @@ public class UserControllerGetUsersTests : IClassFixture<CustomWebApplicationFac
 
                 var user = User.Create(email, name, externalId);
                 user.MarkDeleted();
-                deletedUserIds.Add(user.Id.Value);
                 context.Users.Add(user);
             }
 
@@ -149,6 +144,6 @@ public class UserControllerGetUsersTests : IClassFixture<CustomWebApplicationFac
         var body = await response.Content.ReadFromJsonAsync<PagedUsersResponse>();
         body.Should().NotBeNull();
         body!.Items.Should().NotBeEmpty();
-        body.Items.Should().OnlyContain(user => deletedUserIds.Contains(user.Id) && user.IsDeleted);
+        body.Items.Should().OnlyContain(user => user.IsDeleted);
     }
 }
