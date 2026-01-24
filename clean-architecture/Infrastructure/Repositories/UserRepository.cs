@@ -27,12 +27,6 @@ public class UserRepository(AppDbContext context) : IUserRepository
             .FirstOrDefaultAsync(u => u.ExternalAuthId == externalAuthId, cancellationToken);
     }
 
-    public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        return await context.Set<User>()
-            .ToListAsync(cancellationToken);
-    }
-
     public async Task<(IReadOnlyCollection<User> Items, int TotalCount)> GetPagedAsync(
         UserQueryCriteria criteria,
         CancellationToken cancellationToken = default)
