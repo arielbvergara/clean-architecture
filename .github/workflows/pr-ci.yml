@@ -60,7 +60,6 @@ jobs:
 
        - name: Enforce dotnet format (style & analyzers)
          run: |
-           dotnet tool restore || true
            dotnet format --verify-no-changes
 
   # Suggested additional jobs/steps you can enable later:
