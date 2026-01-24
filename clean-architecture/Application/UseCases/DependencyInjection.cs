@@ -1,5 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
 using Application.UseCases.User;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Application.UseCases;
 

@@ -8,6 +8,8 @@
     <File Path="ADRs\006-user-role-and-soft-delete-lifecycle.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
+    <File Path=".editorconfig" />
+    <File Path=".github\workflows\pr-ci.yml" />
     <File Path=".gitignore" />
     <File Path="AGENTS.md" />
     <File Path="docker-compose.yml" />

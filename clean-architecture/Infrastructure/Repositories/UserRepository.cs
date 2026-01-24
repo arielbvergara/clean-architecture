@@ -1,9 +1,9 @@
 using Application.Dtos.User;
-using Microsoft.EntityFrameworkCore;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.ValueObject;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
@@ -38,14 +38,14 @@ public class UserRepository(AppDbContext context) : IUserRepository
         var users = await context.Set<User>()
             .IgnoreQueryFilters()
             .ToListAsync(cancellationToken);
- 
+
         IEnumerable<User> filtered = users;
- 
+
         if (criteria.IsDeletedFilter.HasValue)
         {
             filtered = filtered.Where(user => user.IsDeleted == criteria.IsDeletedFilter.Value);
         }
- 
+
         if (!string.IsNullOrWhiteSpace(criteria.SearchTerm))
         {
             var searchTerm = criteria.SearchTerm.Trim();

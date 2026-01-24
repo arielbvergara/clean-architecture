@@ -1,10 +1,10 @@
 using System.Reflection;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
 using Application.Interfaces;
 using Application.UseCases;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using WebAPI.Authentication;
 using WebAPI.Filters;
 

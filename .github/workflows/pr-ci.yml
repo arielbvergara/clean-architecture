@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: '**/*.csproj'
 
       - name: Restore dependencies
         run: dotnet restore $SOLUTION_FILE
@@ -41,24 +43,26 @@ jobs:
           name: dotnet-test-results
           path: ${{ env.TEST_RESULTS_DIR }}
 
+  lint-and-format:
+     name: Lint and Formatting Check
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v4
+
+       - name: Setup .NET SDK
+         uses: actions/setup-dotnet@v4
+         with:
+           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+       - name: Restore dependencies
+         run: dotnet restore $SOLUTION_FILE
+
+       - name: Enforce dotnet format (style & analyzers)
+         run: |
+           dotnet format --verify-no-changes
+
   # Suggested additional jobs/steps you can enable later:
-  #
-  # lint-and-format:
-  #   name: Lint and Formatting Check
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Setup .NET SDK
-  #       uses: actions/setup-dotnet@v4
-  #       with:
-  #         dotnet-version: ${{ env.DOTNET_VERSION }}
-  #
-  #     - name: Enforce dotnet format (style & analyzers)
-  #       run: |
-  #         dotnet tool restore || true
-  #         dotnet format --verify-no-changes
   #
   # security-and-deps:
   #   name: Dependency and Security Checks

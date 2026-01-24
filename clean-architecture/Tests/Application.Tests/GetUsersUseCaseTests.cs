@@ -30,11 +30,11 @@ public class GetUsersUseCaseTests
             1,
             20,
             null);
- 
+
         userRepositoryMock
             .Setup(repo => repo.GetPagedAsync(criteria, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<User> { user }, 1));
- 
+
         var request = new GetUsersRequest(
             null,
             UserSortField.CreatedAt,
