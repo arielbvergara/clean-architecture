@@ -6,5 +6,6 @@ public record UserResponse(
     string Name,
     string ExternalAuthId,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    bool IsDeleted
 );

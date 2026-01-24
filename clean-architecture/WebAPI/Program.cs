@@ -59,8 +59,18 @@ public class Program
 
         if (string.IsNullOrWhiteSpace(clientAppOrigin))
         {
-            throw new InvalidOperationException(
-                $"Client app origin configuration '{clientAppConfigSection}:{clientAppOriginConfigKey}' is missing.");
+            // In the Testing environment, fall back to a safe default origin so that
+            // WebAPI.Tests can run without requiring full configuration. In all other
+            // environments, fail fast to surface misconfiguration early.
+            if (builder.Environment.IsEnvironment("Testing"))
+            {
+                clientAppOrigin = "http://localhost";
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Client app origin configuration '{clientAppConfigSection}:{clientAppOriginConfigKey}' is missing.");
+            }
         }
 
         // CORS for frontend client

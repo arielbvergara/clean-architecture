@@ -77,9 +77,13 @@ public static class JwtAuthenticationExtensions
                 .RequireAuthenticatedUser()
                 .Build();
 
-            // Policy for endpoints that should only be accessible to administrators.
+            // Policy for endpoints that should only be accessible to administrators. Uses
+            // the IsAdmin() helper, which checks both standard role claims and the
+            // custom "role" claim used by Firebase tokens.
             options.AddPolicy(AuthorizationPoliciesConstants.AdminOnly, policy =>
-                policy.RequireClaim("role", "admin"));
+            {
+                policy.RequireAssertion(context => context.User.IsAdmin());
+            });
 
             // Convenience policy for endpoints that simply require any authenticated user.
             options.AddPolicy(AuthorizationPoliciesConstants.User, policy =>

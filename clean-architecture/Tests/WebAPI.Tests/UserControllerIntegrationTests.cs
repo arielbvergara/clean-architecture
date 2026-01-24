@@ -33,6 +33,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         createdUser.Should().NotBeNull();
         createdUser!.Email.Should().Be(email);
         createdUser.Name.Should().Be(name);
+        createdUser.IsDeleted.Should().BeFalse();
 
         var userId = createdUser.Id;
 
@@ -54,6 +55,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         meUser!.Id.Should().Be(userId);
         meUser.Email.Should().Be(email);
         meUser.Name.Should().Be(name);
+        meUser.IsDeleted.Should().BeFalse();
 
         // 4) get user by id
         var getByIdResponse = await _client.GetAsync($"/api/User/{userId}");
@@ -63,6 +65,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         userById.Should().NotBeNull();
         userById!.Email.Should().Be(email);
         userById.Name.Should().Be(name);
+        userById.IsDeleted.Should().BeFalse();
 
         // 5) modify the user's name (to "test modified") via /me
         var updateBody = new UpdateUserNameDto(updatedName);
@@ -73,6 +76,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         var updatedUser = await updateResponse.Content.ReadFromJsonAsync<UserResponse>();
         updatedUser.Should().NotBeNull();
         updatedUser!.Name.Should().Be(updatedName);
+        updatedUser.IsDeleted.Should().BeFalse();
 
         // 6) get current user via /me and check name was modified
         var getAfterUpdateResponse = await _client.GetAsync("/api/User/me");
@@ -81,6 +85,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         var userAfterUpdate = await getAfterUpdateResponse.Content.ReadFromJsonAsync<UserResponse>();
         userAfterUpdate.Should().NotBeNull();
         userAfterUpdate!.Name.Should().Be(updatedName);
+        userAfterUpdate.IsDeleted.Should().BeFalse();
 
         // 7) delete the current user via /me
         var deleteResponse = await _client.DeleteAsync("/api/User/me");
