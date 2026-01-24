@@ -1,0 +1,101 @@
+name: PR CI
+
+on:
+  pull_request:
+    # Trigger when a pull request (MR) is opened, updated, or reopened
+    types: [opened, synchronize, reopened, ready_for_review]
+
+env:
+  DOTNET_VERSION: "10.0.x"           # Keep in sync with your SDK / TargetFramework
+  SOLUTION_FILE: "clean-architecture.slnx"
+  BUILD_CONFIGURATION: "Release"
+  TEST_RESULTS_DIR: "TestResults"
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore $SOLUTION_FILE
+
+      - name: Build solution
+        run: dotnet build $SOLUTION_FILE --configuration $BUILD_CONFIGURATION --no-restore
+
+      - name: Run tests
+        run: dotnet test $SOLUTION_FILE --configuration $BUILD_CONFIGURATION --no-build --logger trx --results-directory $TEST_RESULTS_DIR
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-results
+          path: ${{ env.TEST_RESULTS_DIR }}
+
+  # Suggested additional jobs/steps you can enable later:
+  #
+  # lint-and-format:
+  #   name: Lint and Formatting Check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup .NET SDK
+  #       uses: actions/setup-dotnet@v4
+  #       with:
+  #         dotnet-version: ${{ env.DOTNET_VERSION }}
+  #
+  #     - name: Enforce dotnet format (style & analyzers)
+  #       run: |
+  #         dotnet tool restore || true
+  #         dotnet format --verify-no-changes
+  #
+  # security-and-deps:
+  #   name: Dependency and Security Checks
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup .NET SDK
+  #       uses: actions/setup-dotnet@v4
+  #       with:
+  #         dotnet-version: ${{ env.DOTNET_VERSION }}
+  #
+  #     - name: Check for vulnerable packages
+  #       run: dotnet list package --vulnerable --include-transitive
+  #
+  #     - name: Run basic security analysis (placeholder)
+  #       run: echo "Hook a SAST/secret-scanning tool here (e.g., CodeQL, trufflehog)."
+  #
+  # coverage-report:
+  #   name: Test Coverage (example)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup .NET SDK
+  #       uses: actions/setup-dotnet@v4
+  #       with:
+  #         dotnet-version: ${{ env.DOTNET_VERSION }}
+  #
+  #     - name: Run tests with coverage
+  #       run: |
+  #         dotnet test $SOLUTION_FILE --configuration $BUILD_CONFIGURATION --collect "Code Coverage" --results-directory $TEST_RESULTS_DIR
+  #
+  #     - name: Upload coverage
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: coverage-results
+  #         path: ${{ env.TEST_RESULTS_DIR }}
