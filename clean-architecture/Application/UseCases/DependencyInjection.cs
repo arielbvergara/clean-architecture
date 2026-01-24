@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddScoped<UpdateUserNameUseCase>();
         services.AddScoped<DeleteUserUseCase>();
         services.AddScoped<GetUserByExternalAuthIdUseCase>();
+        services.AddScoped<GetUsersUseCase>();
 
         return services;
     }

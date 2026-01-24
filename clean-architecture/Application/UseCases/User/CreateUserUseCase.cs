@@ -55,7 +55,8 @@ public class CreateUserUseCase(
             user.Name.Value,
             user.ExternalAuthId.Value,
             user.CreatedAt,
-            user.UpdatedAt
+            user.UpdatedAt,
+            user.IsDeleted
         );
     }
 }

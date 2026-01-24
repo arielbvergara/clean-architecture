@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Dtos.User;
@@ -24,12 +23,54 @@ public class UserController(
     GetUserByExternalAuthIdUseCase getUserByExternalAuthIdUseCase,
     UpdateUserNameUseCase updateUserNameUseCase,
     DeleteUserUseCase deleteUserUseCase,
+    GetUsersUseCase getUsersUseCase,
     IAuthorizationService authorizationService,
     ILogger<UserController> logger)
     : ControllerBase
 {
     // User creation is intentionally anonymous to allow initial provisioning of a user record
     // for a newly authenticated identity. Ownership and further operations still require auth.
+    /// <summary>
+    /// Gets a paginated list of users. Restricted to administrators.
+    /// </summary>
+    /// <remarks>
+    /// Supports searching across email, name, and id, as well as ordering by email, name,
+    /// and creation timestamp in both ascending and descending directions.
+    /// </remarks>
+    [HttpGet]
+    [Authorize(Policy = AuthorizationPoliciesConstants.AdminOnly)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] string? search,
+        [FromQuery] UserSortField? orderBy,
+        [FromQuery] SortDirection? sortDirection,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] bool? isDeleted = null,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new GetUsersRequest(
+            search,
+            orderBy ?? UserSortField.CreatedAt,
+            sortDirection ?? SortDirection.Descending,
+            pageNumber,
+            pageSize,
+            isDeleted);
+
+        var result = await getUsersUseCase.ExecuteAsync(request, cancellationToken);
+
+        return result.Match(
+            onSuccess: Ok,
+            onFailure: error => error switch
+            {
+                Application.Exceptions.ValidationException =>
+                    BadRequest(new { error.Message }),
+                _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
+            });
+    }
+
     /// <summary>
     /// Creates a new user record for the given external identity.
     /// </summary>

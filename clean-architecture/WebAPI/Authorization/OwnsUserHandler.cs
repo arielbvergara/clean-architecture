@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Application.Dtos.User;
 using Application.UseCases.User;
 using Microsoft.AspNetCore.Authorization;

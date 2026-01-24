@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -21,6 +22,18 @@ public class CustomWebApplicationFactory : WebApplicationFactory<WebAPI.Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Inject minimal configuration required for tests so Program.cs does not throw
+        // (e.g., ClientApp:Origin required for CORS setup).
+        builder.ConfigureAppConfiguration((context, configurationBuilder) =>
+        {
+            var testSettings = new Dictionary<string, string?>
+            {
+                ["ClientApp:Origin"] = "http://localhost",
+            };
+
+            configurationBuilder.AddInMemoryCollection(testSettings!);
+        });
+
         builder.ConfigureServices(services =>
         {
             // Override authentication with a lightweight test scheme.
