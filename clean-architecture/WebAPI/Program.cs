@@ -15,6 +15,9 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        // Support `~` in GOOGLE_APPLICATION_CREDENTIALS path
+        SetGoogleApplicationCredentialsPath();
+
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
@@ -165,5 +168,18 @@ public class Program
         }
 
         app.Run();
+    }
+
+    private static void SetGoogleApplicationCredentialsPath()
+    {
+        var googleCredentials = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+        if (string.IsNullOrEmpty(googleCredentials) || !googleCredentials.StartsWith('~'))
+        {
+            return;
+        }
+
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var expandedPath = googleCredentials.Replace("~", home);
+        Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", expandedPath);
     }
 }
