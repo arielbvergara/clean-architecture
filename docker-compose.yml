@@ -17,6 +17,11 @@ services:
     environment:
       UseInMemoryDB: "false"
       ConnectionStrings__DbContext: "Host=postgres;Port=5432;Database=cleanarchitecture;Username=appuser;Password=devpassword;"
+      ASPNETCORE_ENVIRONMENT: Development
+      ClientApp__Origin: "http://localhost:3000"
+      GOOGLE_APPLICATION_CREDENTIALS: /app/firebase-adminsdk.json
+    volumes:
+      - ~/secrets/firebase-adminsdk.json:/app/firebase-adminsdk.json
     ports:
       - "8080:8080"
 

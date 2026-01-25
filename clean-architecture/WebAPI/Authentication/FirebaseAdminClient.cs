@@ -15,8 +15,8 @@ namespace WebAPI.Authentication;
 /// </summary>
 public sealed class FirebaseAdminClient : IFirebaseAdminClient
 {
-    private const string RoleClaimKey = "role";
-    private const string AdminRoleClaimValue = "admin";
+    private const string _roleClaimKey = "role";
+    private const string _adminRoleClaimValue = "admin";
 
     private readonly FirebaseAuth _auth;
 
@@ -24,9 +24,13 @@ public sealed class FirebaseAdminClient : IFirebaseAdminClient
     {
         if (FirebaseApp.DefaultInstance is null)
         {
+            // Use Application Default Credentials (ADC) so that sensitive service account
+            // keys are not stored in source control. In development and deployment
+            // environments, configure GOOGLE_APPLICATION_CREDENTIALS or a platform-
+            // specific identity (e.g., workload identity) to supply credentials.
             FirebaseApp.Create(new AppOptions
             {
-                Credential = GoogleCredential.FromFile("firebase-service-account.json")
+                Credential = GoogleCredential.GetApplicationDefault()
             });
         }
 
@@ -83,10 +87,10 @@ public sealed class FirebaseAdminClient : IFirebaseAdminClient
             ? new Dictionary<string, object>()
             : new Dictionary<string, object>(userRecord.CustomClaims);
 
-        if (!existingClaims.TryGetValue(RoleClaimKey, out var roleValue) ||
-            !string.Equals(roleValue?.ToString(), AdminRoleClaimValue, StringComparison.OrdinalIgnoreCase))
+        if (!existingClaims.TryGetValue(_roleClaimKey, out var roleValue) ||
+            !string.Equals(roleValue?.ToString(), _adminRoleClaimValue, StringComparison.OrdinalIgnoreCase))
         {
-            existingClaims[RoleClaimKey] = AdminRoleClaimValue;
+            existingClaims[_roleClaimKey] = _adminRoleClaimValue;
             await _auth.SetCustomUserClaimsAsync(userRecord.Uid, existingClaims).ConfigureAwait(false);
         }
 
