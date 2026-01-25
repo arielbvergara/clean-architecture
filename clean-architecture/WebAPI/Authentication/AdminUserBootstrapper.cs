@@ -14,9 +14,12 @@ public sealed class AdminUserBootstrapper(
     IFirebaseAdminClient firebaseAdminClient,
     IUserRepository userRepository,
     IOptions<AdminUserOptions> options,
+    IHostEnvironment hostEnvironment,
     ILogger<AdminUserBootstrapper> logger)
     : IAdminUserBootstrapper
 {
+    private const int _minimumAdminPasswordLength = 12;
+
     private readonly AdminUserOptions _options = options.Value;
 
     public async Task SeedAdminUserAsync(CancellationToken cancellationToken = default)
@@ -30,10 +33,26 @@ public sealed class AdminUserBootstrapper(
             string.IsNullOrWhiteSpace(_options.Password) ||
             string.IsNullOrWhiteSpace(_options.DisplayName))
         {
-            logger.LogWarning(
-                "Admin user seeding is enabled but AdminUser options are incomplete. " +
-                "Email, Password, and DisplayName must all be provided.");
-            return;
+            if (hostEnvironment.IsDevelopment())
+            {
+                logger.LogWarning(
+                    "Admin user seeding is enabled but AdminUser options are incomplete. " +
+                    "Email, Password, and DisplayName must all be provided.");
+                return;
+            }
+
+            throw new InvalidOperationException(
+                "Admin user seeding is enabled but required AdminUser options are missing in this environment.");
+        }
+
+        if (!hostEnvironment.IsDevelopment())
+        {
+            if (_options.Password.Length < _minimumAdminPasswordLength ||
+                string.Equals(_options.Password, _options.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Admin user password does not meet minimum complexity requirements in non-development environments.");
+            }
         }
 
         var email = Email.Create(_options.Email);

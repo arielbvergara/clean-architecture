@@ -1,6 +1,8 @@
+using Domain.Constants;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
+using WebAPI.Authorization;
 
 namespace WebAPI.Authentication;
 
@@ -15,9 +17,6 @@ namespace WebAPI.Authentication;
 /// </summary>
 public sealed class FirebaseAdminClient : IFirebaseAdminClient
 {
-    private const string _roleClaimKey = "role";
-    private const string _adminRoleClaimValue = "admin";
-
     private readonly FirebaseAuth _auth;
 
     public FirebaseAdminClient()
@@ -87,11 +86,11 @@ public sealed class FirebaseAdminClient : IFirebaseAdminClient
             ? new Dictionary<string, object>()
             : new Dictionary<string, object>(userRecord.CustomClaims);
 
-        if (!existingClaims.TryGetValue(_roleClaimKey, out var roleValue) ||
-            !string.Equals(roleValue?.ToString(), _adminRoleClaimValue, StringComparison.OrdinalIgnoreCase))
+        if (!existingClaims.TryGetValue(AuthorizationConstants.RoleClaimKey, out var roleValue) ||
+            !string.Equals(roleValue?.ToString(), UserRoleConstants.Admin, StringComparison.OrdinalIgnoreCase))
         {
-            existingClaims[_roleClaimKey] = _adminRoleClaimValue;
-            await _auth.SetCustomUserClaimsAsync(userRecord.Uid, existingClaims).ConfigureAwait(false);
+            existingClaims[AuthorizationConstants.RoleClaimKey] = UserRoleConstants.Admin;
+            await _auth.SetCustomUserClaimsAsync(userRecord.Uid, existingClaims, cancellationToken).ConfigureAwait(false);
         }
 
         return userRecord.Uid;
