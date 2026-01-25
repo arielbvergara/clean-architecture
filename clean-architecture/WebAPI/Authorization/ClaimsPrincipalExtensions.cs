@@ -31,8 +31,11 @@ public static class ClaimsPrincipalExtensions
                 return true;
             }
 
-            // Firebase custom claim approach (e.g. { "role": "admin" }).
-            var roleClaim = user.FindFirst("role")?.Value;
+            // Support both Firebase-style "role" and the standard ClaimTypes.Role mapping
+            // that many middleware components (including tests) rely on.
+            var roleClaim = user.FindFirst("role")?.Value
+                           ?? user.FindFirst(ClaimTypes.Role)?.Value;
+
             return string.Equals(roleClaim, "admin", StringComparison.OrdinalIgnoreCase);
         }
 

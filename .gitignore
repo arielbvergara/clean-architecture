@@ -195,3 +195,6 @@ healthchecksdb
 # Ignore accidental Windows-style output dirs that show up on Unix as literal names
 **/bin\\Debug/
 **/bin\\Release/
+
+# Ignore firebase credentials file.
+/clean-architecture/WebAPI/firebase-service-account.json

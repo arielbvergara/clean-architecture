@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using WebAPI.Authorization;
@@ -61,9 +62,11 @@ public static class JwtAuthenticationExtensions
                 options.TokenValidationParameters.ValidateLifetime = true;
                 options.TokenValidationParameters.ClockSkew = TimeSpan.FromMinutes(2);
 
-                // Map Firebase custom claim "role" into ASP.NET Core's role system so that
-                // User.IsInRole("admin") and [Authorize(Roles = "admin")] work as expected.
-                options.TokenValidationParameters.RoleClaimType = "role";
+                // Use the standard ClaimTypes.Role for ASP.NET Core role checks so that
+                // both tests (which set ClaimTypes.Role) and production tokens work as
+                // expected. The IsAdmin() helper still falls back to the raw "role" claim
+                // if present.
+                options.TokenValidationParameters.RoleClaimType = ClaimTypes.Role;
             });
 
         // Register custom authorization handlers.
