@@ -10,18 +10,13 @@ namespace WebAPI.Tests;
 /// TEST-ONLY authentication handler used by WebAPI.Tests.
 /// DO NOT use this in production; real environments must rely on JWT bearer tokens.
 /// </summary>
-public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+public class TestAuthHandler(
+    IOptionsMonitor<AuthenticationSchemeOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     public const string SchemeName = "Test";
-
-    public TestAuthHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder,
-        ISystemClock clock)
-        : base(options, logger, encoder, clock)
-    {
-    }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {

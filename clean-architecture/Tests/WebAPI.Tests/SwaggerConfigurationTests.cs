@@ -22,9 +22,11 @@ public class SwaggerConfigurationTests(CustomWebApplicationFactory factory)
         var document = provider.GetSwagger("v1");
 
         // Assert
+        document.Components.Should().NotBeNull();
+        document.Components!.SecuritySchemes.Should().NotBeNull();
         document.Components.SecuritySchemes.Should().ContainKey("bearer");
 
-        var bearerScheme = document.Components.SecuritySchemes["bearer"];
+        var bearerScheme = document.Components.SecuritySchemes!["bearer"];
         bearerScheme.Should().NotBeNull();
         bearerScheme.Type.Should().Be(SecuritySchemeType.Http);
         bearerScheme.Scheme.Should().Be("bearer");
