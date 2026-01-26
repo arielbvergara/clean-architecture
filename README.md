@@ -83,6 +83,70 @@ This project can be used with Firebase Authentication as the identity provider. 
 
 The WebAPI uses the `sub` claim to resolve the current user and enforce record ownership, so this mapping keeps authentication and authorization aligned.
 
+### Configuring Firebase Admin credentials for admin bootstrap
+
+To support the admin user bootstrap flow (see ADR 007), the WebAPI uses the Firebase Admin SDK with **Application Default Credentials (ADC)**. You must provide a Firebase service account JSON key file and point `GOOGLE_APPLICATION_CREDENTIALS` at it.
+
+> These steps are for local development and Docker-based environments only. Do not commit service account JSON files to source control.
+
+#### 1. Create/download the Firebase Admin SDK service account JSON
+
+1. In the Firebase console for your project (e.g., `clean-architecture-ariel`), go to **Project settings → Service accounts**.
+2. Click **Generate new private key** for the Firebase Admin SDK service account.
+3. Download the JSON file and save it outside the repository, for example:
+   - `~/secrets/firebase-adminsdk.json`
+
+#### 2. Configure local development (dotnet run)
+
+`WebAPI` uses the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to locate the service account JSON. In development:
+
+- `clean-architecture/WebAPI/Properties/launchSettings.json` is preconfigured with:
+  - `"GOOGLE_APPLICATION_CREDENTIALS": "~/secrets/firebase-adminsdk.json"`
+- `Program.cs` expands `~` to your user profile directory on startup, so the JSON file must exist at that path.
+
+To run locally with admin bootstrap enabled:
+
+1. Place the downloaded JSON at `~/secrets/firebase-adminsdk.json`.
+2. Ensure `GOOGLE_APPLICATION_CREDENTIALS` is set (either via `launchSettings.json` or your shell):
+
+   ```bash
+   export GOOGLE_APPLICATION_CREDENTIALS=~/secrets/firebase-adminsdk.json
+   ```
+
+3. Configure `AdminUser` in `clean-architecture/WebAPI/appsettings.Development.json` or via environment variables (see ADR 007 for details).
+4. Run the Web API:
+
+   ```bash
+   dotnet run --project clean-architecture/WebAPI/WebAPI.csproj
+   ```
+
+#### 3. Configure Docker Compose
+
+The provided `docker-compose.yml` mounts the same JSON file into the WebAPI container and sets `GOOGLE_APPLICATION_CREDENTIALS` accordingly:
+
+- Volume mount:
+
+  ```yaml
+  - ~/secrets/firebase-adminsdk.json:/app/firebase-adminsdk.json
+  ```
+
+- Environment variable:
+
+  ```yaml
+  GOOGLE_APPLICATION_CREDENTIALS: /app/firebase-adminsdk.json
+  ```
+
+To use this setup:
+
+1. Ensure `~/secrets/firebase-adminsdk.json` exists on the host machine.
+2. Start the stack:
+
+   ```bash
+   docker compose up --build
+   ```
+
+The WebAPI container will use the mounted service account file for Firebase Admin operations, including seeding the initial admin user when configured.
+
 ### Test authentication in `WebAPI.Tests`
 
 The `WebAPI.Tests` project uses a lightweight test authentication handler (`TestAuthHandler`) wired via `CustomWebApplicationFactory`:
