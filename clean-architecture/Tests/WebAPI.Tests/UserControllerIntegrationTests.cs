@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Application.Dtos.User;
 using FluentAssertions;
 using WebAPI.Controllers;
+using WebAPI.DTOs;
 using Xunit;
 
 namespace WebAPI.Tests;

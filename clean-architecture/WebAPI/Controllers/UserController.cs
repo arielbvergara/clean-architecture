@@ -3,16 +3,9 @@ using Application.UseCases.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Authorization;
+using WebAPI.DTOs;
 
 namespace WebAPI.Controllers;
-
-/// <summary>
-/// Request payload for creating a new user via the WebAPI.
-///
-/// The external authentication identifier is *not* supplied by the client; it is derived from
-/// the authenticated principal's token claims (see <see cref="ClaimsPrincipalExtensions.GetExternalAuthId"/>).
-/// </summary>
-public sealed record CreateUserDto(string Email, string Name);
 
 /// <summary>
 /// Exposes user management and self-service endpoints.
