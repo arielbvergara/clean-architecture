@@ -7,6 +7,14 @@ using WebAPI.Authorization;
 namespace WebAPI.Controllers;
 
 /// <summary>
+/// Request payload for creating a new user via the WebAPI.
+///
+/// The external authentication identifier is *not* supplied by the client; it is derived from
+/// the authenticated principal's token claims (see <see cref="ClaimsPrincipalExtensions.GetExternalAuthId"/>).
+/// </summary>
+public sealed record CreateUserDto(string Email, string Name);
+
+/// <summary>
 /// Exposes user management and self-service endpoints.
 ///
 /// Includes `/api/User/me` operations that act on the current authenticated user,
@@ -27,8 +35,6 @@ public class UserController(
     ILogger<UserController> logger)
     : ControllerBase
 {
-    // User creation is intentionally anonymous to allow initial provisioning of a user record
-    // for a newly authenticated identity. Ownership and further operations still require auth.
     /// <summary>
     /// Gets a paginated list of users. Restricted to administrators.
     /// </summary>
@@ -71,22 +77,32 @@ public class UserController(
     }
 
     /// <summary>
-    /// Creates a new user record for the given external identity.
+    /// Creates a new user record for the current authenticated identity.
     /// </summary>
     /// <remarks>
     /// This endpoint is typically called once after a user has authenticated with the external
-    /// identity provider (for example, Firebase). The <c>externalAuthId</c> should match the
-    /// subject/UID from the access token used by that provider.
+    /// identity provider (for example, Firebase). The external authentication identifier is
+    /// derived exclusively from the caller's access token (for example, the JWT <c>sub</c>
+    /// claim) and is not accepted from the request body.
     /// </remarks>
-    [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request,
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserDto request,
         CancellationToken cancellationToken)
     {
-        var result = await createUserUseCase.ExecuteAsync(request, cancellationToken);
+        var externalAuthId = User.GetExternalAuthId();
+        if (string.IsNullOrWhiteSpace(externalAuthId))
+        {
+            logger.LogWarning("Authenticated principal is missing external auth identifier claim when creating user.");
+            return Forbid();
+        }
+
+        var appRequest = new CreateUserRequest(request.Email, request.Name, externalAuthId);
+
+        var result = await createUserUseCase.ExecuteAsync(appRequest, cancellationToken);
 
         return result.Match(
             onSuccess: user => CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user),
