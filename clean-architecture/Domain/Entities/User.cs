@@ -1,3 +1,4 @@
+using Domain.Constants;
 using Domain.ValueObject;
 
 namespace Domain.Entities;
@@ -41,7 +42,21 @@ public sealed class User
             email,
             name,
             externalAuthId,
-            role: "User",
+            role: UserRoleConstants.User,
+            createdAt: DateTime.UtcNow,
+            isDeleted: false,
+            deletedAt: null);
+        return user;
+    }
+
+    public static User CreateAdmin(Email email, UserName name, ExternalAuthIdentifier externalAuthId)
+    {
+        var user = new User(
+            UserId.NewId(),
+            email,
+            name,
+            externalAuthId,
+            role: UserRoleConstants.Admin,
             createdAt: DateTime.UtcNow,
             isDeleted: false,
             deletedAt: null);
@@ -51,6 +66,17 @@ public sealed class User
     public void UpdateName(UserName name)
     {
         Name = name;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetRole(string role)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new ArgumentException("Role cannot be null or whitespace.", nameof(role));
+        }
+
+        Role = role;
         UpdatedAt = DateTime.UtcNow;
     }
 

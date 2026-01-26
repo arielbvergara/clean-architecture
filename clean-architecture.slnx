@@ -6,6 +6,7 @@
     <File Path="ADRs\004-firebase-authentication-and-identity-provider-abstraction.md" />
     <File Path="ADRs\005-webapi-auth-refinements-jwt-policies-me-endpoints.md" />
     <File Path="ADRs\006-user-role-and-soft-delete-lifecycle.md" />
+    <File Path="ADRs\007-admin-bootstrap-and-firebase-admin-integration.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".editorconfig" />

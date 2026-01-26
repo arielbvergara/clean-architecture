@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Domain.Constants;
 
 namespace WebAPI.Authorization;
 
@@ -26,14 +27,17 @@ public static class ClaimsPrincipalExtensions
             ArgumentNullException.ThrowIfNull(user);
 
             // Standard ASP.NET Core role checks (used heavily in tests).
-            if (user.IsInRole("Admin") || user.IsInRole("admin"))
+            if (user.IsInRole(UserRoleConstants.Admin))
             {
                 return true;
             }
 
-            // Firebase custom claim approach (e.g. { "role": "admin" }).
-            var roleClaim = user.FindFirst("role")?.Value;
-            return string.Equals(roleClaim, "admin", StringComparison.OrdinalIgnoreCase);
+            // Support both Firebase-style "role" and the standard ClaimTypes.Role mapping
+            // that many middleware components (including tests) rely on.
+            var roleClaim = user.FindFirst(AuthorizationConstants.RoleClaimKey)?.Value
+                            ?? user.FindFirst(ClaimTypes.Role)?.Value;
+
+            return string.Equals(roleClaim, UserRoleConstants.Admin, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -48,7 +52,8 @@ public static class ClaimsPrincipalExtensions
             ArgumentNullException.ThrowIfNull(user);
 
             // Prefer OpenID Connect 'sub' claim, fall back to NameIdentifier if present.
-            return user.FindFirst("sub")?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return user.FindFirst(AuthorizationConstants.SubjectClaimType)?.Value
+                   ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 }

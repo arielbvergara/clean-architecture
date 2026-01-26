@@ -6,6 +6,7 @@ using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using WebAPI.Authentication;
+using WebAPI.Configuration;
 using WebAPI.Filters;
 
 namespace WebAPI;
@@ -14,6 +15,9 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        // Support `~` in GOOGLE_APPLICATION_CREDENTIALS path
+        SetGoogleApplicationCredentialsPath();
+
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
@@ -98,6 +102,12 @@ public class Program
         // Application use cases
         builder.Services.AddUseCases();
 
+        // Admin user seeding configuration and services
+        builder.Services.Configure<AdminUserOptions>(
+            builder.Configuration.GetSection(AdminUserOptions.SectionName));
+        builder.Services.AddSingleton<IFirebaseAdminClient, FirebaseAdminClient>();
+        builder.Services.AddScoped<IAdminUserBootstrapper, AdminUserBootstrapper>();
+
         if (useInMemoryDb)
         {
             // we could have written that logic here but as per clean architecture, we are separating these into their own piece of code
@@ -144,6 +154,32 @@ public class Program
             context.Database.Migrate();
         }
 
+        // In the Testing environment, skip admin seeding entirely so that integration tests
+        // do not require real Firebase Admin credentials. In all other environments, perform
+        // the idempotent admin bootstrap.
+        var hostEnvironment = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+        if (!hostEnvironment.IsEnvironment("Testing"))
+        {
+            // Seed the initial admin user if configured. This operation is idempotent and
+            // relies on Firebase custom claims for authorization, with a corresponding
+            // domain user record for reporting and future domain logic.
+            var adminBootstrapper = scope.ServiceProvider.GetRequiredService<IAdminUserBootstrapper>();
+            adminBootstrapper.SeedAdminUserAsync().GetAwaiter().GetResult();
+        }
+
         app.Run();
+    }
+
+    private static void SetGoogleApplicationCredentialsPath()
+    {
+        var googleCredentials = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+        if (string.IsNullOrEmpty(googleCredentials) || !googleCredentials.StartsWith('~'))
+        {
+            return;
+        }
+
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var expandedPath = googleCredentials.Replace("~", home);
+        Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", expandedPath);
     }
 }
