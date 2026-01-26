@@ -24,7 +24,6 @@ public class UserController(
     UpdateUserNameUseCase updateUserNameUseCase,
     DeleteUserUseCase deleteUserUseCase,
     GetUsersUseCase getUsersUseCase,
-    IAuthorizationService authorizationService,
     ILogger<UserController> logger)
     : ControllerBase
 {
@@ -206,21 +205,15 @@ public class UserController(
     /// Gets a user by internal identifier.
     /// </summary>
     /// <remarks>
-    /// Normal users can only access their own user id. Administrators can access
-    /// any user. Access is enforced via authorization and ownership checks.
+    /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = AuthorizationPoliciesConstants.AdminOnly)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
-        if (!authorizationResult.Succeeded)
-        {
-            return Forbid();
-        }
-
         var result = await getUserByIdUseCase.ExecuteAsync(new GetUserByIdRequest(id), cancellationToken);
 
         return result.Match(
@@ -240,11 +233,10 @@ public class UserController(
     /// Gets a user by email address.
     /// </summary>
     /// <remarks>
-    /// After resolving the user by email, the same ownership and admin rules
-    /// as the id-based endpoint are applied. Normal users can only retrieve
-    /// their own record; administrators can retrieve any user.
+    /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpGet("email/{email}")]
+    [Authorize(Policy = AuthorizationPoliciesConstants.AdminOnly)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -264,13 +256,6 @@ public class UserController(
         }
 
         var user = result.Value!;
-
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, user.Id, AuthorizationPoliciesConstants.OwnsUser);
-        if (!authorizationResult.Succeeded)
-        {
-            return Forbid();
-        }
-
         return Ok(user);
     }
 
@@ -278,23 +263,17 @@ public class UserController(
     /// Updates the display name of a user identified by id.
     /// </summary>
     /// <remarks>
-    /// Normal users can only update their own name. Administrators can update
-    /// the name of any user, subject to authorization policies.
+    /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpPut("{id:guid}/name")]
+    [Authorize(Policy = AuthorizationPoliciesConstants.AdminOnly)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateUserName(Guid id, [FromBody] UpdateUserNameDto dto,
+    public async Task<IActionResult> UpdateUserNameById(Guid id, [FromBody] UpdateUserNameDto dto,
         CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
-        if (!authorizationResult.Succeeded)
-        {
-            return Forbid();
-        }
-
         var result =
             await updateUserNameUseCase.ExecuteAsync(new UpdateUserNameRequest(id, dto.NewName), cancellationToken);
 
@@ -316,22 +295,16 @@ public class UserController(
     /// Deletes a user identified by id.
     /// </summary>
     /// <remarks>
-    /// Normal users can only delete their own account. Administrators can delete
-    /// any user, subject to authorization policies.
+    /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPoliciesConstants.AdminOnly)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteUserById(Guid id, CancellationToken cancellationToken)
     {
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, id, AuthorizationPoliciesConstants.OwnsUser);
-        if (!authorizationResult.Succeeded)
-        {
-            return Forbid();
-        }
-
         var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(id), cancellationToken);
 
         if (result.IsSuccess)

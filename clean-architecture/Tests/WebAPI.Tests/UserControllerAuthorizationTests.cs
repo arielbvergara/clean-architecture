@@ -36,7 +36,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
     }
 
     [Fact]
-    public async Task GetUserById_ShouldReturnOk_WhenUserAccessesOwnResource()
+    public async Task GetUserById_ShouldReturnForbidden_WhenNonAdminAccessesAnyUser()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -65,10 +65,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         var response = await client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var body = await response.Content.ReadFromJsonAsync<UserResponse>();
-        body.Should().NotBeNull();
-        body!.Id.Should().Be(userId);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -177,7 +174,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
     }
 
     [Fact]
-    public async Task GetUserById_ShouldReturnForbidden_WhenPrincipalHasNoBackingUserRecord()
+    public async Task GetUserById_ShouldReturnForbidden_WhenNonAdminAccessesWithoutBackingUserRecord()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -207,8 +204,6 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         var response = await client.SendAsync(request);
 
         // Assert
-        // The OwnsUser policy should fail closed with 403, without throwing or leaking
-        // internal exception details to the client.
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

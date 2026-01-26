@@ -37,16 +37,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
 
         var userId = createdUser.Id;
 
-        // 2) get user by email
-        var getByEmailResponse = await _client.GetAsync($"/api/User/email/{Uri.EscapeDataString(email)}");
-        getByEmailResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var userByEmail = await getByEmailResponse.Content.ReadFromJsonAsync<UserResponse>();
-        userByEmail.Should().NotBeNull();
-        userByEmail!.Id.Should().Be(userId);
-        userByEmail.Email.Should().Be(email);
-
-        // 3) get current user via /me
+        // 2) get current user via /me
         var getMeResponse = await _client.GetAsync("/api/User/me");
         getMeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -57,15 +48,8 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         meUser.Name.Should().Be(name);
         meUser.IsDeleted.Should().BeFalse();
 
-        // 4) get user by id
-        var getByIdResponse = await _client.GetAsync($"/api/User/{userId}");
-        getByIdResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var userById = await getByIdResponse.Content.ReadFromJsonAsync<UserResponse>();
-        userById.Should().NotBeNull();
-        userById!.Email.Should().Be(email);
-        userById.Name.Should().Be(name);
-        userById.IsDeleted.Should().BeFalse();
+        // 4) (intentionally no direct /api/User/{id} call here)
+        // Id-based endpoints are now admin-only; the self-service flow uses /me.
 
         // 5) modify the user's name (to "test modified") via /me
         var updateBody = new UpdateUserNameDto(updatedName);
@@ -94,10 +78,5 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         // verify user is deleted: /me should now fail with 404 (current user no longer resolvable)
         var getAfterDeleteMeResponse = await _client.GetAsync("/api/User/me");
         getAfterDeleteMeResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
-
-        // direct access by id should now be forbidden because the current principal can no longer
-        // be resolved to a user record and the OwnsUser policy fails closed.
-        var getAfterDeleteByIdResponse = await _client.GetAsync($"/api/User/{userId}");
-        getAfterDeleteByIdResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }
