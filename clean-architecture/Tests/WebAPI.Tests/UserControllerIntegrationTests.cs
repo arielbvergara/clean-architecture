@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using Application.Dtos.User;
 using FluentAssertions;
+using WebAPI.Controllers;
+using WebAPI.DTOs;
 using Xunit;
 
 namespace WebAPI.Tests;
@@ -24,7 +26,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         _client.DefaultRequestHeaders.Add("X-Test-Only-ExternalId", externalAuthId);
 
         // 1) create a user
-        var createRequest = new CreateUserRequest(email, name, externalAuthId);
+        var createRequest = new CreateUserDto(email, name);
 
         var createResponse = await _client.PostAsJsonAsync("/api/User", createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -33,6 +35,7 @@ public class UserControllerIntegrationTests(CustomWebApplicationFactory factory)
         createdUser.Should().NotBeNull();
         createdUser!.Email.Should().Be(email);
         createdUser.Name.Should().Be(name);
+        createdUser.ExternalAuthId.Should().Be(externalAuthId);
         createdUser.IsDeleted.Should().BeFalse();
 
         var userId = createdUser.Id;

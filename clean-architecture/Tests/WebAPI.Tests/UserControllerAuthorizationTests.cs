@@ -20,6 +20,53 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
     }
 
     [Fact]
+    public async Task CreateUser_ShouldReturnUnauthorized_WhenRequestIsAnonymous()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var createRequest = new
+        {
+            Email = "anonymous@example.com",
+            Name = "Anonymous User"
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/User", createRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task CreateUser_ShouldPersistExternalAuthIdFromToken_WhenAuthenticated()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        const string externalIdFromToken = "create-user-token-external-id";
+        const string externalIdFromBody = "body-override-external-id";
+
+        client.DefaultRequestHeaders.Add("X-Test-Only-ExternalId", externalIdFromToken);
+
+        var createRequest = new
+        {
+            Email = "create-user@example.com",
+            Name = "Create User",
+            // This field is intentionally not part of the WebAPI contract and should be ignored
+            ExternalAuthId = externalIdFromBody
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/User", createRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var createdUser = await response.Content.ReadFromJsonAsync<UserResponse>();
+        createdUser.Should().NotBeNull();
+        createdUser!.ExternalAuthId.Should().Be(externalIdFromToken);
+    }
+
+    [Fact]
     public async Task GetUserById_ShouldReturnUnauthorized_WhenRequestIsAnonymous()
     {
         // Arrange
