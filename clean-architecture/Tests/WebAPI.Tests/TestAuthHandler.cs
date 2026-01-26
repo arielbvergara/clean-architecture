@@ -32,7 +32,7 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var externalId = externalIdValues.ToString();
+        var externalId = externalIdValues.ToString()!;
 
         var claims = new List<Claim>
         {
@@ -42,7 +42,7 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         if (Request.Headers.TryGetValue("X-Test-Only-Role", out var roleValues) &&
             !string.IsNullOrWhiteSpace(roleValues.ToString()))
         {
-            claims.Add(new Claim(ClaimTypes.Role, roleValues.ToString()));
+            claims.Add(new Claim(ClaimTypes.Role, roleValues.ToString()!));
         }
 
         var identity = new ClaimsIdentity(claims, SchemeName);
