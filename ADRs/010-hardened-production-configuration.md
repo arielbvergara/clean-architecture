@@ -1,10 +1,9 @@
 # 10. Hardened Production Configuration Strategy
 
-Date: 2026-01-26
-
 ## Status
-
-Accepted
+- **Status**: Accepted
+- **Date**: 2026-01-25
+- **Related issue**: [GitHub issue #8](https://github.com/arielbvergara/clean-architecture/issues/8)
 
 ## Context
 
@@ -19,7 +18,7 @@ OWASP Top 10 A02:2025 (Cryptographic Failures) and previous A05:2021 (Security M
 
 We will implement a "secure by default" configuration strategy for production environments:
 
-1.  **Strict `AllowedHosts`**: 
+1.  **Strict `AllowedHosts`**:
     - In `appsettings.Production.json`, `AllowedHosts` will be set to an empty string or specific strict defaults, forcing operators to explicitly define the allowed hostnames (e.g., via environment variable `AllowedHosts`) for the application to function correctly in production.
     - We strictly avoid `*` in production.
 
