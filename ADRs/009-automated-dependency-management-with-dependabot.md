@@ -1,7 +1,9 @@
 # ADR 009: Automated Dependency Management with Dependabot
 
 ## Status
-Accepted
+
+- **Status**: Accepted
+- **Date**: 2026-01-25
 
 ## Context
 This project relies on multiple external dependencies including NuGet packages (.NET libraries), GitHub Actions workflows, and Docker base images. Without automated dependency management, these dependencies can become outdated, leading to:

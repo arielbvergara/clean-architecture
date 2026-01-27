@@ -78,14 +78,33 @@ public class Program
         }
 
         // CORS for frontend client
+        var corsSection = builder.Configuration.GetSection("Cors");
+        var allowedMethods = corsSection.GetSection("AllowedMethods").Get<string[]>() ?? [];
+        var allowedHeaders = corsSection.GetSection("AllowedHeaders").Get<string[]>() ?? [];
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy(clientAppCorsPolicyName, policyBuilder =>
             {
-                policyBuilder
-                    .WithOrigins(clientAppOrigin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                policyBuilder.WithOrigins(clientAppOrigin);
+
+                if (allowedMethods.Length > 0)
+                {
+                    policyBuilder.WithMethods(allowedMethods);
+                }
+                else
+                {
+                    policyBuilder.AllowAnyMethod();
+                }
+
+                if (allowedHeaders.Length > 0)
+                {
+                    policyBuilder.WithHeaders(allowedHeaders);
+                }
+                else
+                {
+                    policyBuilder.AllowAnyHeader();
+                }
             });
         });
 

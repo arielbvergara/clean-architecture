@@ -8,6 +8,8 @@
     <File Path="ADRs\006-user-role-and-soft-delete-lifecycle.md" />
     <File Path="ADRs\007-admin-bootstrap-and-firebase-admin-integration.md" />
     <File Path="ADRs\008-admin-only-user-id-email-endpoints.md" />
+    <File Path="ADRs\009-automated-dependency-management-with-dependabot.md" />
+    <File Path="ADRs\010-hardened-production-configuration.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".editorconfig" />
