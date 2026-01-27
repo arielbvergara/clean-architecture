@@ -10,6 +10,7 @@
     <File Path="ADRs\008-admin-only-user-id-email-endpoints.md" />
     <File Path="ADRs\009-automated-dependency-management-with-dependabot.md" />
     <File Path="ADRs\010-hardened-production-configuration.md" />
+    <File Path="ADRs\011-security-headers-and-rate-limiting.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".editorconfig" />
