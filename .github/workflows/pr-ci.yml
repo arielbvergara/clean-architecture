@@ -62,25 +62,25 @@ jobs:
          run: |
            dotnet format --verify-no-changes
 
-  # Suggested additional jobs/steps you can enable later:
-  #
-  # security-and-deps:
-  #   name: Dependency and Security Checks
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v6
-  #
-  #     - name: Setup .NET SDK
-  #       uses: actions/setup-dotnet@v5
-  #       with:
-  #         dotnet-version: ${{ env.DOTNET_VERSION }}
-  #
-  #     - name: Check for vulnerable packages
-  #       run: dotnet list package --vulnerable --include-transitive
-  #
-  #     - name: Run basic security analysis (placeholder)
-  #       run: echo "Hook a SAST/secret-scanning tool here (e.g., CodeQL, trufflehog)."
+  security-and-deps:
+    name: Dependency and Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+
+      - name: Restore dependencies
+        run: dotnet restore $SOLUTION_FILE
+
+      - name: Check for vulnerable packages
+        run: dotnet list package --vulnerable --include-transitive
   #
   # coverage-report:
   #   name: Test Coverage (example)
