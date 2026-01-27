@@ -10,6 +10,8 @@ env:
   SOLUTION_FILE: "clean-architecture.slnx"
   BUILD_CONFIGURATION: "Release"
   TEST_RESULTS_DIR: "TestResults"
+  SBOM_OUTPUT_FILE: "dependency-sbom.spdx.json"
+  SBOM_FORMAT: "spdx-json"
 
 jobs:
   build-and-test:
@@ -81,6 +83,20 @@ jobs:
 
       - name: Check for vulnerable packages
         run: dotnet list package --vulnerable --include-transitive
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: ${{ env.SBOM_FORMAT }}
+          output-file: ${{ env.SBOM_OUTPUT_FILE }}
+          upload-artifact: false
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: dependency-sbom
+          path: ${{ env.SBOM_OUTPUT_FILE }}
   #
   # coverage-report:
   #   name: Test Coverage (example)
