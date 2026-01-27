@@ -64,6 +64,10 @@ jobs:
          run: |
            dotnet format --verify-no-changes
 
+       - name: Verify CI security configuration
+         run: |
+           bash scripts/verify-ci-security.sh
+
   security-and-deps:
     name: Dependency and Security Checks
     runs-on: ubuntu-latest
