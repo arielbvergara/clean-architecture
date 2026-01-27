@@ -18,7 +18,7 @@ public sealed class AdminUserBootstrapper(
     ILogger<AdminUserBootstrapper> logger)
     : IAdminUserBootstrapper
 {
-    private const int _minimumAdminPasswordLength = 12;
+    private const int MinimumAdminPasswordLength = 12;
 
     private readonly AdminUserOptions _options = options.Value;
 
@@ -47,7 +47,7 @@ public sealed class AdminUserBootstrapper(
 
         if (!hostEnvironment.IsDevelopment())
         {
-            if (_options.Password.Length < _minimumAdminPasswordLength ||
+            if (_options.Password.Length < MinimumAdminPasswordLength ||
                 string.Equals(_options.Password, _options.Email, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(
