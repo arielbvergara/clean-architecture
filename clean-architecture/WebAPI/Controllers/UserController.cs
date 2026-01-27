@@ -2,8 +2,10 @@ using Application.Dtos.User;
 using Application.UseCases.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WebAPI.Authorization;
 using WebAPI.DTOs;
+using WebAPI.RateLimiting;
 
 namespace WebAPI.Controllers;
 
@@ -37,6 +39,7 @@ public class UserController(
     /// </remarks>
     [HttpGet]
     [Authorize(Policy = AuthorizationPoliciesConstants.AdminOnly)]
+    [EnableRateLimiting(RateLimitingPolicies.Fixed)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -79,6 +82,7 @@ public class UserController(
     /// claim) and is not accepted from the request body.
     /// </remarks>
     [HttpPost]
+    [EnableRateLimiting(RateLimitingPolicies.Strict)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -119,6 +123,7 @@ public class UserController(
     /// Firebase UID in the JWT <c>sub</c> claim). Clients do not need to provide an id or email.
     /// </remarks>
     [HttpGet("me")]
+    [EnableRateLimiting(RateLimitingPolicies.Fixed)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -142,6 +147,7 @@ public class UserController(
     /// update another user's name; administrators should use the id-based endpoints instead.
     /// </remarks>
     [HttpPut("me/name")]
+    [EnableRateLimiting(RateLimitingPolicies.Strict)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -182,6 +188,7 @@ public class UserController(
     /// intended for self-service account removal scenarios.
     /// </remarks>
     [HttpDelete("me")]
+    [EnableRateLimiting(RateLimitingPolicies.Strict)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

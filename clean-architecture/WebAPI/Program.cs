@@ -1,7 +1,10 @@
 using Application.UseCases;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authorization;
 using WebAPI.Authentication;
 using WebAPI.Configuration;
 using WebAPI.Filters;
+using WebAPI.Middleware;
 
 namespace WebAPI;
 
@@ -26,6 +29,9 @@ public class Program
         // Database configuration
         builder.Services.AddDatabaseConfiguration(builder.Configuration, builder.Environment);
 
+        // Rate Limiting configuration
+        builder.Services.AddRateLimitingConfiguration();
+
         // Authentication & Authorization
         builder.Services.AddJwtAuthenticationAndAuthorization(builder.Configuration, builder.Environment);
 
@@ -47,9 +53,14 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        // Security Headers
+        app.UseMiddleware<SecurityHeadersMiddleware>();
+
         // CORS must run before authentication/authorization so that preflight
         // and actual requests receive the proper headers.
         app.UseCors(CorsConfiguration.GetCorsPolicyName());
+
+        app.UseRateLimiter();
 
         // Authentication & Authorization
         app.UseAuthentication();
@@ -60,6 +71,10 @@ public class Program
         // Database migrations and admin user seeding
         app.UseDatabaseMigration();
         app.UseAdminUserSeeding();
+
+        // Lightweight health endpoint for integration and uptime checks.
+        app.MapGet("/health", () => Results.Ok())
+            .AllowAnonymous();
 
         app.Run();
     }
