@@ -34,7 +34,8 @@ public class Program
 
         // Admin user seeding configuration and services
         builder.Services.Configure<AdminUserOptions>(
-            builder.Configuration.GetSection(AdminUserOptions.SectionName));
+            builder.Configuration.GetSection(AdminUserOptions.SectionName)
+        );
         builder.Services.AddSingleton<IFirebaseAdminClient, FirebaseAdminClient>();
         builder.Services.AddScoped<IAdminUserBootstrapper, AdminUserBootstrapper>();
 

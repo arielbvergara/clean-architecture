@@ -63,5 +63,8 @@ public static class CorsConfiguration
         return services;
     }
 
-    public static string GetCorsPolicyName() => ClientAppCorsPolicyName;
+    public static string GetCorsPolicyName()
+    {
+        return ClientAppCorsPolicyName;
+    }
 }

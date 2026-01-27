@@ -1,5 +1,4 @@
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 
 namespace WebAPI.Configuration;
@@ -9,7 +8,7 @@ public static class SwaggerConfiguration
     public static IServiceCollection AddSwaggerConfiguration(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
-        
+
         const string bearerSchemeId = "bearer"; // lowercase per RFC 7235
 
         services.AddSwaggerGen(options =>

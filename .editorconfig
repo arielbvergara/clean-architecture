@@ -76,6 +76,17 @@ dotnet_naming_symbols.interface_symbols.applicable_accessibilities = public, int
 dotnet_naming_style.prefix_i_style.required_prefix = I
 dotnet_naming_style.prefix_i_style.capitalization = pascal_case
 
+# Private constants: PascalCase (no underscore)
+dotnet_naming_rule.private_constants_should_be_pascal_case.severity = suggestion
+dotnet_naming_rule.private_constants_should_be_pascal_case.symbols = private_const_symbols
+dotnet_naming_rule.private_constants_should_be_pascal_case.style = pascal_case_style
+
+dotnet_naming_symbols.private_const_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_const_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.private_const_symbols.required_modifiers = const
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
 # Private fields: _camelCase
 dotnet_naming_rule.private_fields_should_be_camel_case.severity = suggestion
 dotnet_naming_rule.private_fields_should_be_camel_case.symbols = private_field_symbols

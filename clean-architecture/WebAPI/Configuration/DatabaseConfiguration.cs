@@ -1,7 +1,6 @@
 using Application.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace WebAPI.Configuration;
 
