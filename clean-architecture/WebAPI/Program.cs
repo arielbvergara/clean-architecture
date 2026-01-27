@@ -1,6 +1,4 @@
 using Application.UseCases;
-using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.Authorization;
 using WebAPI.Authentication;
 using WebAPI.Configuration;
 using WebAPI.Filters;
