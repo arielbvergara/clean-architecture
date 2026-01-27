@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dotnet-test-results
           path: ${{ env.TEST_RESULTS_DIR }}
@@ -99,7 +99,7 @@ jobs:
   #         dotnet test $SOLUTION_FILE --configuration $BUILD_CONFIGURATION --collect "Code Coverage" --results-directory $TEST_RESULTS_DIR
   #
   #     - name: Upload coverage
-  #       uses: actions/upload-artifact@v4
+  #       uses: actions/upload-artifact@v6
   #       with:
   #         name: coverage-results
   #         path: ${{ env.TEST_RESULTS_DIR }}
