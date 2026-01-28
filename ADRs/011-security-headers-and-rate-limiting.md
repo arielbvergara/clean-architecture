@@ -143,6 +143,11 @@ We will harden the WebAPI boundary by introducing explicit middleware and config
 - `WebAPI.Tests` updated to include:
   - `RateLimitingTests` and `SecurityHeadersTests` using `CustomWebApplicationFactory` and FluentAssertions.
 
+## Related ADRs
+
+- [ADR-014: Security Design and Threat Model for User Endpoints](./014-security-design-and-threat-model-for-user-endpoints.md) – defines the user endpoint security model that these headers and rate limits protect.
+
+
 ## References
 
 - [GitHub issue #9](https://github.com/arielbvergara/clean-architecture/issues/9)

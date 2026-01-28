@@ -108,6 +108,11 @@ We will add a first-class supply chain and dependency scanning capability to PR 
 - SBOM generation uses `anchore/sbom-action@v0` with SPDX JSON output stored as `dependency-sbom.spdx.json` and uploaded as `dependency-sbom` artifact.
 - Guardrail script lives at `scripts/verify-ci-security.sh` and is invoked from the `lint-and-format` job.
 
+## Related ADRs
+
+- [ADR-014: Security Design and Threat Model for User Endpoints](./014-security-design-and-threat-model-for-user-endpoints.md) – context for the application assets that this supply chain security protects.
+
+
 ## References
 
 - [GitHub issue #10](https://github.com/arielbvergara/clean-architecture/issues/10)
