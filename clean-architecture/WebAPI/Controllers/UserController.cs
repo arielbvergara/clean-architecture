@@ -65,10 +65,14 @@ public class UserController(
 
         var result = await getUsersUseCase.ExecuteAsync(request, cancellationToken);
 
-        return result.MatchToActionResult(
-            Ok,
-            this,
-            HttpContext.TraceIdentifier);
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to get list of users. Error: {error}", error.Message);
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        return Ok(result.Value!);
     }
 
     /// <summary>

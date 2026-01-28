@@ -11,21 +11,6 @@ namespace WebAPI.ErrorHandling;
 public static class ErrorResponseMapper
 {
     /// <summary>
-    /// Maps a <see cref="Result{T, AppException}"/> into an <see cref="IActionResult"/>,
-    /// delegating the failure side to <see cref="ToActionResult(ControllerBase, AppException, string?)"/>.
-    /// </summary>
-    public static IActionResult MatchToActionResult<T>(
-        this Result<T, AppException> result,
-        Func<T, IActionResult> onSuccess,
-        ControllerBase controller,
-        string? correlationId = null)
-    {
-        return result.Match(
-            onSuccess,
-            error => controller.ToActionResult(error, correlationId));
-    }
-
-    /// <summary>
     /// Maps an <see cref="AppException"/> into a standardized error response.
     /// </summary>
     public static IActionResult ToActionResult(
