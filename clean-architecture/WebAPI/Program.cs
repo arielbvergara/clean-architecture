@@ -51,6 +51,10 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        // Correlation ID must be established early so it flows through logging
+        // scopes and error handling.
+        app.UseMiddleware<CorrelationIdMiddleware>();
+
         // Security Headers
         app.UseMiddleware<SecurityHeadersMiddleware>();
 
