@@ -18,7 +18,8 @@ public class UpdateUserNameUseCaseTests
     {
         // Arrange
         var repositoryMock = new Mock<IUserRepository>();
-        var useCase = new UpdateUserNameUseCase(repositoryMock.Object);
+        var ownershipServiceMock = new Mock<IUserOwnershipService>();
+        var useCase = new UpdateUserNameUseCase(repositoryMock.Object, ownershipServiceMock.Object);
 
         var targetUserId = Guid.NewGuid();
         var externalAuthId = ExternalAuthIdentifier.Create("provider|owner-123");
@@ -31,9 +32,13 @@ public class UpdateUserNameUseCaseTests
             .Setup(r => r.GetByIdAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        repositoryMock
-            .Setup(r => r.GetByExternalAuthIdAsync(It.Is<ExternalAuthIdentifier>(e => e.Value == externalAuthId.Value), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
+        ownershipServiceMock
+            .Setup(s => s.EnsureOwnerOrAdminAsync(
+                user,
+                It.IsAny<CurrentUserContext?>(),
+                targetUserId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AppException?)null);
 
         var currentUserContext = new CurrentUserContext(externalAuthId.Value, UserRoleConstants.User);
         var request = new UpdateUserNameRequest(targetUserId, "New Name", currentUserContext);
@@ -52,7 +57,8 @@ public class UpdateUserNameUseCaseTests
     {
         // Arrange
         var repositoryMock = new Mock<IUserRepository>();
-        var useCase = new UpdateUserNameUseCase(repositoryMock.Object);
+        var ownershipServiceMock = new Mock<IUserOwnershipService>();
+        var useCase = new UpdateUserNameUseCase(repositoryMock.Object, ownershipServiceMock.Object);
 
         var targetUserId = Guid.NewGuid();
         var externalAuthId = ExternalAuthIdentifier.Create("provider|user-123");
@@ -64,6 +70,14 @@ public class UpdateUserNameUseCaseTests
         repositoryMock
             .Setup(r => r.GetByIdAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
+
+        ownershipServiceMock
+            .Setup(s => s.EnsureOwnerOrAdminAsync(
+                user,
+                It.IsAny<CurrentUserContext?>(),
+                targetUserId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AppException?)null);
 
         var currentUserContext = new CurrentUserContext("provider|admin-456", UserRoleConstants.Admin);
         var request = new UpdateUserNameRequest(targetUserId, "Admin Updated Name", currentUserContext);
@@ -82,7 +96,8 @@ public class UpdateUserNameUseCaseTests
     {
         // Arrange
         var repositoryMock = new Mock<IUserRepository>();
-        var useCase = new UpdateUserNameUseCase(repositoryMock.Object);
+        var ownershipServiceMock = new Mock<IUserOwnershipService>();
+        var useCase = new UpdateUserNameUseCase(repositoryMock.Object, ownershipServiceMock.Object);
 
         var targetUserId = Guid.NewGuid();
         var targetExternalAuthId = ExternalAuthIdentifier.Create("provider|target-123");
@@ -95,19 +110,15 @@ public class UpdateUserNameUseCaseTests
             .Setup(r => r.GetByIdAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(targetUser);
 
-        // current user resolved from repository is a different user
-        var callerExternalAuthId = ExternalAuthIdentifier.Create("provider|caller-999");
-        var callerUser = DomainUser.Create(
-            Email.Create("caller@example.com"),
-            UserName.Create("Caller"),
-            callerExternalAuthId);
-
-        repositoryMock
-            .Setup(r => r.GetByExternalAuthIdAsync(
-                It.Is<ExternalAuthIdentifier>(e => e.Value == callerExternalAuthId.Value),
+        ownershipServiceMock
+            .Setup(s => s.EnsureOwnerOrAdminAsync(
+                targetUser,
+                It.IsAny<CurrentUserContext?>(),
+                targetUserId,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(callerUser);
+            .ReturnsAsync(new NotFoundException("User", targetUserId));
 
+        var callerExternalAuthId = ExternalAuthIdentifier.Create("provider|caller-999");
         var currentUserContext = new CurrentUserContext(callerExternalAuthId.Value, UserRoleConstants.User);
         var request = new UpdateUserNameRequest(targetUserId, "New Name", currentUserContext);
 
@@ -125,7 +136,8 @@ public class UpdateUserNameUseCaseTests
     {
         // Arrange
         var repositoryMock = new Mock<IUserRepository>();
-        var useCase = new UpdateUserNameUseCase(repositoryMock.Object);
+        var ownershipServiceMock = new Mock<IUserOwnershipService>();
+        var useCase = new UpdateUserNameUseCase(repositoryMock.Object, ownershipServiceMock.Object);
 
         var targetUserId = Guid.NewGuid();
 

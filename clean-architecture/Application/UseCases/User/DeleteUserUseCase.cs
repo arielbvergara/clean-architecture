@@ -1,13 +1,12 @@
 using Application.Dtos.User;
 using Application.Exceptions;
 using Application.Interfaces;
-using Domain.Constants;
 using Domain.Primitives;
 using Domain.ValueObject;
 
 namespace Application.UseCases.User;
 
-public class DeleteUserUseCase(IUserRepository userRepository)
+public class DeleteUserUseCase(IUserRepository userRepository, IUserOwnershipService userOwnershipService)
 {
     public async Task<Result<bool, AppException>> ExecuteAsync(DeleteUserRequest request, CancellationToken cancellationToken = default)
     {
@@ -21,18 +20,15 @@ public class DeleteUserUseCase(IUserRepository userRepository)
                 return Result<bool, AppException>.Fail(new NotFoundException("User", request.UserId));
             }
 
-            if (request.CurrentUser is not null &&
-                !string.Equals(request.CurrentUser.Role, UserRoleConstants.Admin, StringComparison.OrdinalIgnoreCase))
-            {
-                var currentUserExternalId = ExternalAuthIdentifier.Create(request.CurrentUser.UserId);
-                var currentUser = await userRepository.GetByExternalAuthIdAsync(currentUserExternalId, cancellationToken);
+            var ownershipError = await userOwnershipService.EnsureOwnerOrAdminAsync(
+                user,
+                request.CurrentUser,
+                request.UserId,
+                cancellationToken);
 
-                if (currentUser is null || currentUser.Id != user.Id)
-                {
-                    // Anti-enumeration: behave as if the target user does not exist when
-                    // the caller is not the owner and not an administrator.
-                    return Result<bool, AppException>.Fail(new NotFoundException("User", request.UserId));
-                }
+            if (ownershipError is not null)
+            {
+                return Result<bool, AppException>.Fail(ownershipError);
             }
 
             await userRepository.DeleteAsync(userId, cancellationToken);

@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using Application.UseCases.User;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,6 +8,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddUseCases(this IServiceCollection services)
     {
+        // User services
+        services.AddScoped<IUserOwnershipService, UserOwnershipService>();
+
         // User use cases
         services.AddScoped<CreateUserUseCase>();
         services.AddScoped<GetUserByIdUseCase>();
