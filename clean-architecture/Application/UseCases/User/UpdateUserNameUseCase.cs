@@ -1,6 +1,7 @@
 using Application.Dtos.User;
 using Application.Exceptions;
 using Application.Interfaces;
+using Domain.Constants;
 using Domain.Primitives;
 using Domain.ValueObject;
 

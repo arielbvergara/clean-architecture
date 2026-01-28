@@ -41,6 +41,7 @@ public class GetUsersUseCaseTests
             SortDirection.Descending,
             1,
             20,
+            null,
             null);
 
         // Act
@@ -70,6 +71,7 @@ public class GetUsersUseCaseTests
             SortDirection.Descending,
             1,
             5000,
+            null,
             null);
 
         UserQueryCriteria? capturedCriteria = null;
@@ -100,6 +102,7 @@ public class GetUsersUseCaseTests
             SortDirection.Descending,
             0,
             10,
+            null,
             null);
 
         UserQueryCriteria? capturedCriteria = null;
@@ -130,7 +133,8 @@ public class GetUsersUseCaseTests
             SortDirection.Descending,
             1,
             10,
-            true);
+            true,
+            null);
 
         UserQueryCriteria? capturedCriteria = null;
         userRepositoryMock
