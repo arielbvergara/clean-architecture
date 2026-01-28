@@ -12,6 +12,7 @@
     <File Path="ADRs\010-hardened-production-configuration.md" />
     <File Path="ADRs\011-security-headers-and-rate-limiting.md" />
     <File Path="ADRs\012-supply-chain-and-dependency-scanning-ci.md" />
+    <File Path="ADRs\013-standardized-error-handling-and-security-logging.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".editorconfig" />

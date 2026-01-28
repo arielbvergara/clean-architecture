@@ -1,4 +1,6 @@
+using Application.Interfaces;
 using Application.UseCases;
+using Infrastructure.Logging;
 using WebAPI.Authentication;
 using WebAPI.Configuration;
 using WebAPI.Filters;
@@ -36,6 +38,9 @@ public class Program
         // Application use cases
         builder.Services.AddUseCases();
 
+        // Security event notifier
+        builder.Services.AddScoped<ISecurityEventNotifier, LoggingSecurityEventNotifier>();
+
         // Admin user seeding configuration and services
         builder.Services.Configure<AdminUserOptions>(
             builder.Configuration.GetSection(AdminUserOptions.SectionName)
@@ -50,6 +55,10 @@ public class Program
         app.UseSwaggerUI();
 
         app.UseHttpsRedirection();
+
+        // Correlation ID must be established early so it flows through logging
+        // scopes and error handling.
+        app.UseMiddleware<CorrelationIdMiddleware>();
 
         // Security Headers
         app.UseMiddleware<SecurityHeadersMiddleware>();

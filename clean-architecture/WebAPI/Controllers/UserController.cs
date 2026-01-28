@@ -1,10 +1,12 @@
 using Application.Dtos.User;
+using Application.Interfaces;
 using Application.UseCases.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using WebAPI.Authorization;
 using WebAPI.DTOs;
+using WebAPI.ErrorHandling;
 using WebAPI.RateLimiting;
 
 namespace WebAPI.Controllers;
@@ -27,7 +29,8 @@ public class UserController(
     UpdateUserNameUseCase updateUserNameUseCase,
     DeleteUserUseCase deleteUserUseCase,
     GetUsersUseCase getUsersUseCase,
-    ILogger<UserController> logger)
+    ILogger<UserController> logger,
+    ISecurityEventNotifier securityEventNotifier)
     : ControllerBase
 {
     /// <summary>
@@ -62,14 +65,14 @@ public class UserController(
 
         var result = await getUsersUseCase.ExecuteAsync(request, cancellationToken);
 
-        return result.Match(
-            onSuccess: Ok,
-            onFailure: error => error switch
-            {
-                Application.Exceptions.ValidationException =>
-                    BadRequest(new { error.Message }),
-                _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-            });
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to get list of users. Error: {error}", error.Message);
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        return Ok(result.Value!);
     }
 
     /// <summary>
@@ -101,18 +104,40 @@ public class UserController(
 
         var result = await createUserUseCase.ExecuteAsync(appRequest, cancellationToken);
 
-        return result.Match(
-            onSuccess: user => CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to create user: {Message}", error.Message);
-                return error switch
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to create user: {Message}", error.Message);
+
+            await securityEventNotifier.NotifyAsync(
+                SecurityEventNames.UserCreateFailed,
+                null,
+                SecurityEventOutcomes.Failure,
+                HttpContext.TraceIdentifier,
+                new Dictionary<string, string?>
                 {
-                    Application.Exceptions.ConflictException => Conflict(new { error.Message }),
-                    Application.Exceptions.ValidationException => BadRequest(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+                    { "Route", HttpContext.Request.Path },
+                    { "ExceptionType", error.Type.ToString() }
+                },
+                cancellationToken);
+
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        var user = result.Value!;
+
+        await securityEventNotifier.NotifyAsync(
+            SecurityEventNames.UserCreated,
+            user.Id.ToString(),
+            SecurityEventOutcomes.Success,
+            HttpContext.TraceIdentifier,
+            new Dictionary<string, string?>
+            {
+                { "Route", HttpContext.Request.Path }
+            },
+            cancellationToken);
+
+        return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
     }
 
     /// <summary>
@@ -165,19 +190,40 @@ public class UserController(
             new UpdateUserNameRequest(currentUser!.Id, dto.NewName),
             cancellationToken);
 
-        return result.Match(
-            onSuccess: user => Ok(user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to update current user name: {Message}",
-                    error.Message);
-                return error switch
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to update current user name: {Message}", error.Message);
+
+            await securityEventNotifier.NotifyAsync(
+                SecurityEventNames.UserUpdateFailed,
+                currentUser.Id.ToString(),
+                SecurityEventOutcomes.Failure,
+                HttpContext.TraceIdentifier,
+                new Dictionary<string, string?>
                 {
-                    Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                    Application.Exceptions.ValidationException => BadRequest(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+                    { "Route", HttpContext.Request.Path },
+                    { "ExceptionType", error.Type.ToString() }
+                },
+                cancellationToken);
+
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        var updatedUser = result.Value!;
+
+        await securityEventNotifier.NotifyAsync(
+            SecurityEventNames.UserUpdated,
+            updatedUser.Id.ToString(),
+            SecurityEventOutcomes.Success,
+            HttpContext.TraceIdentifier,
+            new Dictionary<string, string?>
+            {
+                { "Route", HttpContext.Request.Path }
+            },
+            cancellationToken);
+
+        return Ok(updatedUser);
     }
 
     /// <summary>
@@ -204,17 +250,38 @@ public class UserController(
 
         var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(currentUser!.Id), cancellationToken);
 
-        if (result.IsSuccess)
-            return NoContent();
-
-        var error = result.Error!;
-        logger.LogError(error.InnerException, "Failed to delete current user: {Message}", error.Message);
-        return error switch
+        if (result.IsFailure)
         {
-            Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-            Application.Exceptions.ConflictException => Conflict(new { error.Message }),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-        };
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to delete current user: {Message}", error.Message);
+
+            await securityEventNotifier.NotifyAsync(
+                SecurityEventNames.UserDeleteFailed,
+                currentUser.Id.ToString(),
+                SecurityEventOutcomes.Failure,
+                HttpContext.TraceIdentifier,
+                new Dictionary<string, string?>
+                {
+                    { "Route", HttpContext.Request.Path },
+                    { "ExceptionType", error.Type.ToString() }
+                },
+                cancellationToken);
+
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        await securityEventNotifier.NotifyAsync(
+            SecurityEventNames.UserDeleted,
+            currentUser.Id.ToString(),
+            SecurityEventOutcomes.Success,
+            HttpContext.TraceIdentifier,
+            new Dictionary<string, string?>
+            {
+                { "Route", HttpContext.Request.Path }
+            },
+            cancellationToken);
+
+        return NoContent();
     }
 
     /// <summary>
@@ -232,17 +299,14 @@ public class UserController(
     {
         var result = await getUserByIdUseCase.ExecuteAsync(new GetUserByIdRequest(id), cancellationToken);
 
-        return result.Match(
-            onSuccess: user => Ok(user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to get user: {Message}", error.Message);
-                return error switch
-                {
-                    Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to get user: {Message}", error.Message);
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        return Ok(result.Value!);
     }
 
     /// <summary>
@@ -264,15 +328,10 @@ public class UserController(
         {
             var error = result.Error!;
             logger.LogError(error.InnerException, "Failed to get user by email: {Message}", error.Message);
-            return error switch
-            {
-                Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-            };
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
         }
 
-        var user = result.Value!;
-        return Ok(user);
+        return Ok(result.Value!);
     }
 
     /// <summary>
@@ -293,18 +352,40 @@ public class UserController(
         var result =
             await updateUserNameUseCase.ExecuteAsync(new UpdateUserNameRequest(id, dto.NewName), cancellationToken);
 
-        return result.Match(
-            onSuccess: user => Ok(user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to update user name: {Message}", error.Message);
-                return error switch
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to update user name: {Message}", error.Message);
+
+            await securityEventNotifier.NotifyAsync(
+                SecurityEventNames.UserUpdateFailed,
+                id.ToString(),
+                SecurityEventOutcomes.Failure,
+                HttpContext.TraceIdentifier,
+                new Dictionary<string, string?>
                 {
-                    Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                    Application.Exceptions.ValidationException => BadRequest(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+                    { "Route", HttpContext.Request.Path },
+                    { "ExceptionType", error.Type.ToString() }
+                },
+                cancellationToken);
+
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        var updatedUser = result.Value!;
+
+        await securityEventNotifier.NotifyAsync(
+            SecurityEventNames.UserUpdated,
+            updatedUser.Id.ToString(),
+            SecurityEventOutcomes.Success,
+            HttpContext.TraceIdentifier,
+            new Dictionary<string, string?>
+            {
+                { "Route", HttpContext.Request.Path }
+            },
+            cancellationToken);
+
+        return Ok(updatedUser);
     }
 
     /// <summary>
@@ -323,17 +404,38 @@ public class UserController(
     {
         var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(id), cancellationToken);
 
-        if (result.IsSuccess)
-            return NoContent();
-
-        var error = result.Error!;
-        logger.LogError(error.InnerException, "Failed to delete user: {Message}", error.Message);
-        return error switch
+        if (result.IsFailure)
         {
-            Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-            Application.Exceptions.ConflictException => Conflict(new { error.Message }),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-        };
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to delete user: {Message}", error.Message);
+
+            await securityEventNotifier.NotifyAsync(
+                SecurityEventNames.UserDeleteFailed,
+                id.ToString(),
+                SecurityEventOutcomes.Failure,
+                HttpContext.TraceIdentifier,
+                new Dictionary<string, string?>
+                {
+                    { "Route", HttpContext.Request.Path },
+                    { "ExceptionType", error.Type.ToString() }
+                },
+                cancellationToken);
+
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        await securityEventNotifier.NotifyAsync(
+            SecurityEventNames.UserDeleted,
+            id.ToString(),
+            SecurityEventOutcomes.Success,
+            HttpContext.TraceIdentifier,
+            new Dictionary<string, string?>
+            {
+                { "Route", HttpContext.Request.Path }
+            },
+            cancellationToken);
+
+        return NoContent();
     }
 
     /// <summary>
