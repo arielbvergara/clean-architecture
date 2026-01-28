@@ -27,9 +27,15 @@ Architecture decisions are documented under the `ADRs/` directory. Key ADRs rela
 - `001-use-microsoft-testing-platform-runner.md` – adopt Microsoft Testing Platform as the test runner.
 - `002-postgres-and-docker-compose.md` – configure PostgreSQL and Docker Compose for local development.
 - `003-webapi-authentication-and-authorization-for-user-endpoints.md` – initial WebAPI authZ model for `UserController`.
-- `004-firebase-authentication-and-identity-provider-abstraction.md` – introduce a WebAPI-only JWT abstraction and configure Firebase as the default IdP.
+- `004-guid-identity-and-authentication-provider.md` – defines the identity provider abstraction and how JWT-based authentication is integrated without leaking provider specifics into the Domain/Application layers.
 - `005-webapi-auth-refinements-jwt-policies-me-endpoints.md` – refine JWT config for Firebase, add policies/OwnsUser handler, and introduce `/me` endpoints and failure-path tests.
-- `006-user-role-and-soft-delete-lifecycle.md` – add `Role`, `IsDeleted`, `DeletedAt` to `User` and switch to soft delete with a global query filter.
+- `006-user-role-and-soft-delete-lifecycle.md` – add `Role`, `IsDeleted`, `DeletedAt` to `User` and implement a soft-delete lifecycle for users.
+- `007-admin-bootstrap-and-firebase-admin-integration.md` – define the secure, idempotent admin user bootstrap process and Firebase Admin integration owned by the WebAPI layer.
+- `008-admin-only-user-id-email-endpoints.md` – make id/email-based user management endpoints admin-only and reserve `/me` routes for self-service operations.
+- `009-automated-dependency-management-with-dependabot.md` – configure Dependabot to keep NuGet packages, GitHub Actions, and Docker images up to date.
+- `010-hardened-production-configuration.md` – introduce secure-by-default production configuration for CORS, `AllowedHosts`, and environment-specific settings.
+- `011-security-headers-and-rate-limiting.md` – add standardized security headers and ASP.NET Core rate limiting policies (`Fixed`/`Strict`) to harden the WebAPI surface.
+- `012-supply-chain-and-dependency-scanning-ci.md` – add a `security-and-deps` CI job for `dotnet list package` vulnerability scans and SBOM generation, with guardrails.
 - `013-standardized-error-handling-and-security-logging.md` – define standardized API error envelopes, correlation IDs, and structured security logging aligned with OWASP A09/A10.
 
 ## Getting Started
