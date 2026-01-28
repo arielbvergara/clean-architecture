@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using WebAPI.Authorization;
 using WebAPI.DTOs;
+using WebAPI.ErrorHandling;
 using WebAPI.RateLimiting;
 
 namespace WebAPI.Controllers;
@@ -62,14 +63,10 @@ public class UserController(
 
         var result = await getUsersUseCase.ExecuteAsync(request, cancellationToken);
 
-        return result.Match(
-            onSuccess: Ok,
-            onFailure: error => error switch
-            {
-                Application.Exceptions.ValidationException =>
-                    BadRequest(new { error.Message }),
-                _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-            });
+        return result.MatchToActionResult(
+            users => Ok(users),
+            this,
+            HttpContext.TraceIdentifier);
     }
 
     /// <summary>
@@ -101,18 +98,15 @@ public class UserController(
 
         var result = await createUserUseCase.ExecuteAsync(appRequest, cancellationToken);
 
-        return result.Match(
-            onSuccess: user => CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to create user: {Message}", error.Message);
-                return error switch
-                {
-                    Application.Exceptions.ConflictException => Conflict(new { error.Message }),
-                    Application.Exceptions.ValidationException => BadRequest(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+        if (result.IsSuccess)
+        {
+            var user = result.Value!;
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
+        }
+
+        var error = result.Error!;
+        logger.LogError(error.InnerException, "Failed to create user: {Message}", error.Message);
+        return this.ToActionResult(error, HttpContext.TraceIdentifier);
     }
 
     /// <summary>
@@ -165,19 +159,14 @@ public class UserController(
             new UpdateUserNameRequest(currentUser!.Id, dto.NewName),
             cancellationToken);
 
-        return result.Match(
-            onSuccess: user => Ok(user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to update current user name: {Message}",
-                    error.Message);
-                return error switch
-                {
-                    Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                    Application.Exceptions.ValidationException => BadRequest(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value!);
+        }
+
+        var error = result.Error!;
+        logger.LogError(error.InnerException, "Failed to update current user name: {Message}", error.Message);
+        return this.ToActionResult(error, HttpContext.TraceIdentifier);
     }
 
     /// <summary>
@@ -205,16 +194,13 @@ public class UserController(
         var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(currentUser!.Id), cancellationToken);
 
         if (result.IsSuccess)
+        {
             return NoContent();
+        }
 
         var error = result.Error!;
         logger.LogError(error.InnerException, "Failed to delete current user: {Message}", error.Message);
-        return error switch
-        {
-            Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-            Application.Exceptions.ConflictException => Conflict(new { error.Message }),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-        };
+        return this.ToActionResult(error, HttpContext.TraceIdentifier);
     }
 
     /// <summary>
@@ -232,17 +218,14 @@ public class UserController(
     {
         var result = await getUserByIdUseCase.ExecuteAsync(new GetUserByIdRequest(id), cancellationToken);
 
-        return result.Match(
-            onSuccess: user => Ok(user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to get user: {Message}", error.Message);
-                return error switch
-                {
-                    Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value!);
+        }
+
+        var error = result.Error!;
+        logger.LogError(error.InnerException, "Failed to get user: {Message}", error.Message);
+        return this.ToActionResult(error, HttpContext.TraceIdentifier);
     }
 
     /// <summary>
@@ -260,19 +243,14 @@ public class UserController(
     {
         var result = await getUserByEmailUseCase.ExecuteAsync(new GetUserByEmailRequest(email), cancellationToken);
 
-        if (result.IsFailure)
+        if (result.IsSuccess)
         {
-            var error = result.Error!;
-            logger.LogError(error.InnerException, "Failed to get user by email: {Message}", error.Message);
-            return error switch
-            {
-                Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-            };
+            return Ok(result.Value!);
         }
 
-        var user = result.Value!;
-        return Ok(user);
+        var error = result.Error!;
+        logger.LogError(error.InnerException, "Failed to get user by email: {Message}", error.Message);
+        return this.ToActionResult(error, HttpContext.TraceIdentifier);
     }
 
     /// <summary>
@@ -293,18 +271,14 @@ public class UserController(
         var result =
             await updateUserNameUseCase.ExecuteAsync(new UpdateUserNameRequest(id, dto.NewName), cancellationToken);
 
-        return result.Match(
-            onSuccess: user => Ok(user),
-            onFailure: error =>
-            {
-                logger.LogError(error.InnerException, "Failed to update user name: {Message}", error.Message);
-                return error switch
-                {
-                    Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-                    Application.Exceptions.ValidationException => BadRequest(new { error.Message }),
-                    _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-                };
-            });
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value!);
+        }
+
+        var error = result.Error!;
+        logger.LogError(error.InnerException, "Failed to update user name: {Message}", error.Message);
+        return this.ToActionResult(error, HttpContext.TraceIdentifier);
     }
 
     /// <summary>
@@ -324,16 +298,13 @@ public class UserController(
         var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(id), cancellationToken);
 
         if (result.IsSuccess)
+        {
             return NoContent();
+        }
 
         var error = result.Error!;
         logger.LogError(error.InnerException, "Failed to delete user: {Message}", error.Message);
-        return error switch
-        {
-            Application.Exceptions.NotFoundException => NotFound(new { error.Message }),
-            Application.Exceptions.ConflictException => Conflict(new { error.Message }),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Message })
-        };
+        return this.ToActionResult(error, HttpContext.TraceIdentifier);
     }
 
     /// <summary>
