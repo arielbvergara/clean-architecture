@@ -1,4 +1,6 @@
+using Application.Interfaces;
 using Application.UseCases;
+using Infrastructure.Logging;
 using WebAPI.Authentication;
 using WebAPI.Configuration;
 using WebAPI.Filters;
@@ -35,6 +37,9 @@ public class Program
 
         // Application use cases
         builder.Services.AddUseCases();
+
+        // Security event notifier
+        builder.Services.AddScoped<ISecurityEventNotifier, LoggingSecurityEventNotifier>();
 
         // Admin user seeding configuration and services
         builder.Services.Configure<AdminUserOptions>(
