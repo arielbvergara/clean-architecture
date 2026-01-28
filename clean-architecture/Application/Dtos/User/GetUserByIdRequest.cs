@@ -1,3 +1,6 @@
 namespace Application.Dtos.User;
 
-public record GetUserByIdRequest(Guid UserId);
+public sealed record GetUserByIdRequest(
+    Guid UserId,
+    CurrentUserContext? CurrentUser
+);

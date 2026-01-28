@@ -6,5 +6,6 @@ public sealed record GetUsersRequest(
     SortDirection SortDirection,
     int PageNumber,
     int PageSize,
-    bool? IsDeletedFilter
+    bool? IsDeletedFilter,
+    CurrentUserContext? CurrentUser
 );

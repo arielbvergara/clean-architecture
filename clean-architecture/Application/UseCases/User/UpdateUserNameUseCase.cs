@@ -17,7 +17,23 @@ public class UpdateUserNameUseCase(IUserRepository userRepository)
 
             var user = await userRepository.GetByIdAsync(userId, cancellationToken);
             if (user is null)
+            {
                 return Result<UserResponse, AppException>.Fail(new NotFoundException("User", request.UserId));
+            }
+
+            if (request.CurrentUser is not null &&
+                !string.Equals(request.CurrentUser.Role, UserRoleConstants.Admin, StringComparison.OrdinalIgnoreCase))
+            {
+                var currentUserExternalId = ExternalAuthIdentifier.Create(request.CurrentUser.UserId);
+                var currentUser = await userRepository.GetByExternalAuthIdAsync(currentUserExternalId, cancellationToken);
+
+                if (currentUser is null || currentUser.Id != user.Id)
+                {
+                    // Anti-enumeration: behave as if the target user does not exist when
+                    // the caller is not the owner and not an administrator.
+                    return Result<UserResponse, AppException>.Fail(new NotFoundException("User", request.UserId));
+                }
+            }
 
             user.UpdateName(newName);
 

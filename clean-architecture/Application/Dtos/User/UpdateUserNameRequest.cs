@@ -1,3 +1,7 @@
 namespace Application.Dtos.User;
 
-public record UpdateUserNameRequest(Guid UserId, string NewName);
+public sealed record UpdateUserNameRequest(
+    Guid UserId,
+    string NewName,
+    CurrentUserContext? CurrentUser
+);
