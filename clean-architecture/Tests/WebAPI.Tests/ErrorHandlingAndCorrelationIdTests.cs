@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging.Abstractions;
+using WebAPI.ErrorHandling;
 using WebAPI.Filters;
 using WebAPI.Middleware;
-using WebAPI.ErrorHandling;
 using Xunit;
 
 namespace WebAPI.Tests;
@@ -60,8 +60,7 @@ public class ErrorHandlingAndCorrelationIdTests
         var context = new DefaultHttpContext();
         var logger = NullLogger<CorrelationIdMiddleware>.Instance;
 
-        RequestDelegate next = _ => Task.CompletedTask;
-        var middleware = new CorrelationIdMiddleware(next, logger);
+        var middleware = new CorrelationIdMiddleware(Next, logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -73,6 +72,9 @@ public class ErrorHandlingAndCorrelationIdTests
         var headerValue = headerValues.ToString();
         headerValue.Should().NotBeNullOrWhiteSpace();
         context.TraceIdentifier.Should().Be(headerValue);
+        return;
+
+        Task Next(HttpContext _) => Task.CompletedTask;
     }
 
     [Fact]
