@@ -1,3 +1,6 @@
 namespace Application.Dtos.User;
 
-public record GetUserByEmailRequest(string Email);
+public sealed record GetUserByEmailRequest(
+    string Email,
+    CurrentUserContext? CurrentUser
+);

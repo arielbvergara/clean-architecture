@@ -55,13 +55,16 @@ public class UserController(
         [FromQuery] bool? isDeleted = null,
         CancellationToken cancellationToken = default)
     {
+        var currentUserContext = User.ToCurrentUserContext();
+
         var request = new GetUsersRequest(
             search,
             orderBy ?? UserSortField.CreatedAt,
             sortDirection ?? SortDirection.Descending,
             pageNumber,
             pageSize,
-            isDeleted);
+            isDeleted,
+            currentUserContext);
 
         var result = await getUsersUseCase.ExecuteAsync(request, cancellationToken);
 
@@ -186,8 +189,10 @@ public class UserController(
             return errorResult;
         }
 
+        var currentUserContext = User.ToCurrentUserContext();
+
         var result = await updateUserNameUseCase.ExecuteAsync(
-            new UpdateUserNameRequest(currentUser!.Id, dto.NewName),
+            new UpdateUserNameRequest(currentUser!.Id, dto.NewName, currentUserContext),
             cancellationToken);
 
         if (result.IsFailure)
@@ -248,7 +253,11 @@ public class UserController(
             return errorResult;
         }
 
-        var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(currentUser!.Id), cancellationToken);
+        var currentUserContext = User.ToCurrentUserContext();
+
+        var result = await deleteUserUseCase.ExecuteAsync(
+            new DeleteUserRequest(currentUser!.Id, currentUserContext),
+            cancellationToken);
 
         if (result.IsFailure)
         {
@@ -297,7 +306,8 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await getUserByIdUseCase.ExecuteAsync(new GetUserByIdRequest(id), cancellationToken);
+        var currentUserContext = User.ToCurrentUserContext();
+        var result = await getUserByIdUseCase.ExecuteAsync(new GetUserByIdRequest(id, currentUserContext), cancellationToken);
 
         if (result.IsFailure)
         {
@@ -322,7 +332,8 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserByEmail(string email, CancellationToken cancellationToken)
     {
-        var result = await getUserByEmailUseCase.ExecuteAsync(new GetUserByEmailRequest(email), cancellationToken);
+        var currentUserContext = User.ToCurrentUserContext();
+        var result = await getUserByEmailUseCase.ExecuteAsync(new GetUserByEmailRequest(email, currentUserContext), cancellationToken);
 
         if (result.IsFailure)
         {
@@ -349,8 +360,10 @@ public class UserController(
     public async Task<IActionResult> UpdateUserNameById(Guid id, [FromBody] UpdateUserNameDto dto,
         CancellationToken cancellationToken)
     {
-        var result =
-            await updateUserNameUseCase.ExecuteAsync(new UpdateUserNameRequest(id, dto.NewName), cancellationToken);
+        var currentUserContext = User.ToCurrentUserContext();
+        var result = await updateUserNameUseCase.ExecuteAsync(
+            new UpdateUserNameRequest(id, dto.NewName, currentUserContext),
+            cancellationToken);
 
         if (result.IsFailure)
         {
@@ -402,7 +415,8 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteUserById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(id), cancellationToken);
+        var currentUserContext = User.ToCurrentUserContext();
+        var result = await deleteUserUseCase.ExecuteAsync(new DeleteUserRequest(id, currentUserContext), cancellationToken);
 
         if (result.IsFailure)
         {

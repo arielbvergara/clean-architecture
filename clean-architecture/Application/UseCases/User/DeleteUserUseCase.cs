@@ -6,7 +6,7 @@ using Domain.ValueObject;
 
 namespace Application.UseCases.User;
 
-public class DeleteUserUseCase(IUserRepository userRepository)
+public class DeleteUserUseCase(IUserRepository userRepository, IUserOwnershipService userOwnershipService)
 {
     public async Task<Result<bool, AppException>> ExecuteAsync(DeleteUserRequest request, CancellationToken cancellationToken = default)
     {
@@ -16,7 +16,20 @@ public class DeleteUserUseCase(IUserRepository userRepository)
 
             var user = await userRepository.GetByIdAsync(userId, cancellationToken);
             if (user is null)
+            {
                 return Result<bool, AppException>.Fail(new NotFoundException("User", request.UserId));
+            }
+
+            var ownershipError = await userOwnershipService.EnsureOwnerOrAdminAsync(
+                user,
+                request.CurrentUser,
+                request.UserId,
+                cancellationToken);
+
+            if (ownershipError is not null)
+            {
+                return Result<bool, AppException>.Fail(ownershipError);
+            }
 
             await userRepository.DeleteAsync(userId, cancellationToken);
 

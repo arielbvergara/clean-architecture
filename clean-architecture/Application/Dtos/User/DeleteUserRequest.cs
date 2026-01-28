@@ -1,3 +1,6 @@
 namespace Application.Dtos.User;
 
-public record DeleteUserRequest(Guid UserId);
+public sealed record DeleteUserRequest(
+    Guid UserId,
+    CurrentUserContext? CurrentUser
+);
