@@ -37,6 +37,7 @@ Architecture decisions are documented under the `ADRs/` directory. Key ADRs rela
 - `011-security-headers-and-rate-limiting.md` – add standardized security headers and ASP.NET Core rate limiting policies (`Fixed`/`Strict`) to harden the WebAPI surface.
 - `012-supply-chain-and-dependency-scanning-ci.md` – add a `security-and-deps` CI job for `dotnet list package` vulnerability scans and SBOM generation, with guardrails.
 - `013-standardized-error-handling-and-security-logging.md` – define standardized API error envelopes, correlation IDs, and structured security logging aligned with OWASP A09/A10.
+- `014-security-design-and-threat-model-for-user-endpoints.md` – canonical security design and threat model for user endpoints, defining roles, ownership, and enumeration resistance mechanisms.
 
 ## Getting Started
 

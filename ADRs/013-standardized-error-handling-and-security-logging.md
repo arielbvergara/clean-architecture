@@ -121,6 +121,11 @@ We will standardize error handling and security logging in the WebAPI around thr
   - Correlation id propagation behaviors.
   - Logging of key security events.
 
+## Related ADRs
+
+- [ADR-014: Security Design and Threat Model for User Endpoints](./014-security-design-and-threat-model-for-user-endpoints.md) – defines the security events (e.g., authorization failures) that must be logged.
+
+
 ## References
 
 - [GitHub issue #11](https://github.com/arielbvergara/clean-architecture/issues/11)
