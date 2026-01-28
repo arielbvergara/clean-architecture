@@ -10,6 +10,8 @@ env:
   SOLUTION_FILE: "clean-architecture.slnx"
   BUILD_CONFIGURATION: "Release"
   TEST_RESULTS_DIR: "TestResults"
+  SBOM_OUTPUT_FILE: "dependency-sbom.spdx.json"
+  SBOM_FORMAT: "spdx-json"
 
 jobs:
   build-and-test:
@@ -62,25 +64,43 @@ jobs:
          run: |
            dotnet format --verify-no-changes
 
-  # Suggested additional jobs/steps you can enable later:
-  #
-  # security-and-deps:
-  #   name: Dependency and Security Checks
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v6
-  #
-  #     - name: Setup .NET SDK
-  #       uses: actions/setup-dotnet@v5
-  #       with:
-  #         dotnet-version: ${{ env.DOTNET_VERSION }}
-  #
-  #     - name: Check for vulnerable packages
-  #       run: dotnet list package --vulnerable --include-transitive
-  #
-  #     - name: Run basic security analysis (placeholder)
-  #       run: echo "Hook a SAST/secret-scanning tool here (e.g., CodeQL, trufflehog)."
+       - name: Verify CI security configuration
+         run: |
+           bash scripts/verify-ci-security.sh
+
+  security-and-deps:
+    name: Dependency and Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+
+      - name: Restore dependencies
+        run: dotnet restore $SOLUTION_FILE
+
+      - name: Check for vulnerable packages
+        run: dotnet list package --vulnerable --include-transitive
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: ${{ env.SBOM_FORMAT }}
+          output-file: ${{ env.SBOM_OUTPUT_FILE }}
+          upload-artifact: false
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: dependency-sbom
+          path: ${{ env.SBOM_OUTPUT_FILE }}
   #
   # coverage-report:
   #   name: Test Coverage (example)
