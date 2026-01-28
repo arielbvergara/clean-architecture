@@ -1,8 +1,9 @@
 using Application.Interfaces;
+using Application.Services;
 using Application.UseCases.User;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Application.UseCases;
+namespace Application;
 
 public static class DependencyInjection
 {

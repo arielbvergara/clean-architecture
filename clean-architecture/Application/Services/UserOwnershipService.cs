@@ -4,7 +4,7 @@ using Application.Interfaces;
 using Domain.Constants;
 using Domain.ValueObject;
 
-namespace Application.UseCases.User;
+namespace Application.Services;
 
 internal sealed class UserOwnershipService(IUserRepository userRepository) : IUserOwnershipService
 {
