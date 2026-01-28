@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# This script is a small guardrail to ensure the CI security job is not
+# accidentally removed or broken. It verifies that the security-and-deps
+# job and its critical steps still exist in .github/workflows/pr-ci.yml,
+# and fails the pipeline if they do not. If everything is present, it prints:
+#   CI security and dependency checks appear to be configured correctly.
 set -euo pipefail
 
 WORKFLOW_FILE=".github/workflows/pr-ci.yml"
