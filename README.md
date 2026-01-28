@@ -30,6 +30,7 @@ Architecture decisions are documented under the `ADRs/` directory. Key ADRs rela
 - `004-firebase-authentication-and-identity-provider-abstraction.md` – introduce a WebAPI-only JWT abstraction and configure Firebase as the default IdP.
 - `005-webapi-auth-refinements-jwt-policies-me-endpoints.md` – refine JWT config for Firebase, add policies/OwnsUser handler, and introduce `/me` endpoints and failure-path tests.
 - `006-user-role-and-soft-delete-lifecycle.md` – add `Role`, `IsDeleted`, `DeletedAt` to `User` and switch to soft delete with a global query filter.
+- `013-standardized-error-handling-and-security-logging.md` – define standardized API error envelopes, correlation IDs, and structured security logging aligned with OWASP A09/A10.
 
 ## Getting Started
 
