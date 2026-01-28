@@ -1,5 +1,4 @@
 using Application.Exceptions;
-using Domain.Primitives;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.ErrorHandling;

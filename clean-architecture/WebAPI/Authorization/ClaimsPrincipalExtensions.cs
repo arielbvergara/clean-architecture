@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using Domain.Constants;
-
 using Application.Dtos.User;
 using Domain.Constants;
 
