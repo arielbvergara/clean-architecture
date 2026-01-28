@@ -66,7 +66,7 @@ public class UserController(
         var result = await getUsersUseCase.ExecuteAsync(request, cancellationToken);
 
         return result.MatchToActionResult(
-            users => Ok(users),
+            Ok,
             this,
             HttpContext.TraceIdentifier);
     }
@@ -193,7 +193,7 @@ public class UserController(
 
             await securityEventNotifier.NotifyAsync(
                 SecurityEventNames.UserUpdateFailed,
-                currentUser!.Id.ToString(),
+                currentUser.Id.ToString(),
                 SecurityEventOutcomes.Failure,
                 HttpContext.TraceIdentifier,
                 new Dictionary<string, string?>
@@ -253,7 +253,7 @@ public class UserController(
 
             await securityEventNotifier.NotifyAsync(
                 SecurityEventNames.UserDeleteFailed,
-                currentUser!.Id.ToString(),
+                currentUser.Id.ToString(),
                 SecurityEventOutcomes.Failure,
                 HttpContext.TraceIdentifier,
                 new Dictionary<string, string?>
@@ -268,7 +268,7 @@ public class UserController(
 
         await securityEventNotifier.NotifyAsync(
             SecurityEventNames.UserDeleted,
-            currentUser!.Id.ToString(),
+            currentUser.Id.ToString(),
             SecurityEventOutcomes.Success,
             HttpContext.TraceIdentifier,
             new Dictionary<string, string?>
