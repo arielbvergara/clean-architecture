@@ -114,6 +114,7 @@ We will standardize error handling and security logging in the WebAPI around thr
 - Refactor `UserController` to:
   - Delegate error handling to the centralized mapping helpers, instead of constructing anonymous `new { error.Message }` responses.
   - Continue logging security-relevant events, now enriched with correlation id and consistent field names.
+- Use extension methods on `ControllerBase` (via `ErrorResponseMapper`) rather than a shared base controller to keep controllers loosely coupled and avoid imposing an inheritance hierarchy. A dedicated base controller can be introduced later if more shared WebAPI behavior emerges.
 - Introduce correlation id middleware early in the HTTP pipeline and expose a helper for retrieving the current correlation id.
 - Extend tests (primarily in `WebAPI.Tests`) to cover:
   - The shape of error responses.
