@@ -1,5 +1,4 @@
 using Application.Interfaces;
-using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Logging;
 
@@ -13,9 +12,7 @@ namespace Infrastructure.Logging;
 /// monitoring providers such as Sentry without leaking provider details into
 /// controllers or use cases.
 /// </summary>
-public sealed class LoggingSecurityEventNotifier(
-    ILogger<LoggingSecurityEventNotifier> logger,
-    IObservabilityService observabilityService)
+public sealed class LoggingSecurityEventNotifier(IObservabilityService observabilityService)
     : ISecurityEventNotifier
 {
     public async Task NotifyAsync(
@@ -34,14 +31,6 @@ public sealed class LoggingSecurityEventNotifier(
         eventProperties["SubjectId"] = subjectId;
         eventProperties["Outcome"] = outcome;
         eventProperties["CorrelationId"] = correlationId;
-
-        logger.LogInformation(
-            "Security event {EventName} {Outcome} for subject {SubjectId} with correlation {CorrelationId} {@Properties}",
-            eventName,
-            outcome,
-            subjectId ?? "<none>",
-            correlationId ?? "<none>",
-            eventProperties);
 
         // Forward selected high-value failure events to the observability
         // service so that they can be surfaced to monitoring providers such as
@@ -67,6 +56,7 @@ public sealed class LoggingSecurityEventNotifier(
         return eventName is
             SecurityEventNames.UserCreateFailed or
             SecurityEventNames.UserUpdateFailed or
-            SecurityEventNames.UserDeleteFailed;
+            SecurityEventNames.UserDeleteFailed or
+            SecurityEventNames.AdminEndpointAccessDenied;
     }
 }
