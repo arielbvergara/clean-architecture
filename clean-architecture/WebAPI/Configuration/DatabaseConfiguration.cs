@@ -1,3 +1,4 @@
+using System;
 using Application.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
@@ -14,9 +15,53 @@ public static class DatabaseConfiguration
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
 
-        // Always use in-memory database for the Testing environment, regardless of configuration
-        var useInMemoryDb = configuration.GetValue<bool>("UseInMemoryDB") ||
-                            environment.IsEnvironment("Testing");
+        // Testing environment always uses the in-memory database to avoid real infrastructure dependencies
+        var isTestingEnvironment = environment.IsEnvironment("Testing");
+
+        if (isTestingEnvironment)
+        {
+            services.AddInMemoryDatabase();
+            return services;
+        }
+
+        // Prefer the strongly-typed Database:Provider configuration when present
+        var databaseProviderOptions = configuration
+            .GetSection(DatabaseProviderOptions.SectionName)
+            .Get<DatabaseProviderOptions>();
+
+        var configuredProvider = databaseProviderOptions?.Provider;
+
+        if (!string.IsNullOrWhiteSpace(configuredProvider))
+        {
+            if (string.Equals(configuredProvider, DatabaseProviderNames.InMemory, StringComparison.OrdinalIgnoreCase))
+            {
+                services.AddInMemoryDatabase();
+                return services;
+            }
+
+            if (string.Equals(configuredProvider, DatabaseProviderNames.Postgres, StringComparison.OrdinalIgnoreCase))
+            {
+                var connectionString = databaseProviderOptions?.ConnectionString
+                                       ?? configuration.GetConnectionString("DbContext")
+                                       ?? throw new InvalidOperationException(
+                                           "PostgreSQL connection string is missing for the configured database provider.");
+
+                services.AddPostgresDatabase(connectionString);
+                return services;
+            }
+
+            if (string.Equals(configuredProvider, DatabaseProviderNames.Firestore, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Firestore database provider is configured but not yet implemented. See ADR-015 for the implementation plan.");
+            }
+
+            throw new InvalidOperationException(
+                $"Unsupported database provider '{configuredProvider}'. Supported providers are: '{DatabaseProviderNames.InMemory}', '{DatabaseProviderNames.Postgres}', '{DatabaseProviderNames.Firestore}'.");
+        }
+
+        // Fallback to existing behavior when Database:Provider is not configured
+        var useInMemoryDb = configuration.GetValue<bool>("UseInMemoryDB");
 
         if (useInMemoryDb)
         {
