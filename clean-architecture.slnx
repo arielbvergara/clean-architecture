@@ -13,6 +13,7 @@
     <File Path="ADRs\011-security-headers-and-rate-limiting.md" />
     <File Path="ADRs\012-supply-chain-and-dependency-scanning-ci.md" />
     <File Path="ADRs\013-standardized-error-handling-and-security-logging.md" />
+    <File Path="ADRs\014-security-design-and-threat-model-for-user-endpoints.md" />
     <File Path="ADRs\015-firestore-database-provider-and-configuration.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
