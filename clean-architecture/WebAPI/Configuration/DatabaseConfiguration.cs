@@ -1,6 +1,8 @@
 using System;
 using Application.Interfaces;
+using Google.Cloud.Firestore;
 using Infrastructure.Data;
+using Infrastructure.Data.Firestore;
 using Infrastructure.Repositories;
 
 namespace WebAPI.Configuration;
@@ -52,8 +54,21 @@ public static class DatabaseConfiguration
 
             if (string.Equals(configuredProvider, DatabaseProviderNames.Firestore, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(
-                    "Firestore database provider is configured but not yet implemented. See ADR-015 for the implementation plan.");
+                var projectId = databaseProviderOptions?.FirestoreProjectId;
+
+                if (string.IsNullOrWhiteSpace(projectId))
+                {
+                    throw new InvalidOperationException(
+                        "Firestore database provider is configured but Database:FirestoreProjectId is missing.");
+                }
+
+                services.AddSingleton(provider => FirestoreDb.Create(projectId));
+                services.AddScoped<IFirestoreUserDataStore, FirestoreUserDataStore>();
+
+                // Override the default EF-based repository registration when Firestore is selected
+                services.AddScoped<IUserRepository, FirestoreUserRepository>();
+
+                return services;
             }
 
             throw new InvalidOperationException(
