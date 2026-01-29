@@ -13,15 +13,13 @@ public static class DatabaseConfiguration
         IConfiguration configuration,
         IHostEnvironment environment)
     {
-        // Repositories
-        services.AddScoped<IUserRepository, UserRepository>();
-
         // Testing environment always uses the in-memory database to avoid real infrastructure dependencies
         var isTestingEnvironment = environment.IsEnvironment("Testing");
 
         if (isTestingEnvironment)
         {
             services.AddInMemoryDatabase();
+            services.AddScoped<IUserRepository, UserRepository>();
             return services;
         }
 
@@ -37,6 +35,7 @@ public static class DatabaseConfiguration
             if (string.Equals(configuredProvider, DatabaseProviderNames.InMemory, StringComparison.OrdinalIgnoreCase))
             {
                 services.AddInMemoryDatabase();
+                services.AddScoped<IUserRepository, UserRepository>();
                 return services;
             }
 
@@ -48,6 +47,7 @@ public static class DatabaseConfiguration
                                            "PostgresSQL connection string is missing for the configured database provider.");
 
                 services.AddPostgresDatabase(connectionString);
+                services.AddScoped<IUserRepository, UserRepository>();
                 return services;
             }
 
@@ -81,6 +81,7 @@ public static class DatabaseConfiguration
         {
             // we could have written that logic here but as per clean architecture, we are separating these into their own piece of code
             services.AddInMemoryDatabase();
+            services.AddScoped<IUserRepository, UserRepository>();
         }
         else
         {
@@ -90,6 +91,7 @@ public static class DatabaseConfiguration
                                        "PostgresSQL connection string 'DbContext' is missing.");
 
             services.AddPostgresDatabase(connectionString);
+            services.AddScoped<IUserRepository, UserRepository>();
         }
 
         return services;

@@ -19,7 +19,14 @@ public static class PipelineConfiguration
         public IApplicationBuilder UseDatabaseMigration()
         {
             using var scope = app.ApplicationServices.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var context = scope.ServiceProvider.GetService<AppDbContext>();
+            if (context is null)
+            {
+                // When no EF Core AppDbContext is registered (e.g., Firestore provider),
+                // skip migration entirely.
+                return app;
+            }
+
             if (context.Database.IsRelational())
             {
                 context.Database.Migrate();
