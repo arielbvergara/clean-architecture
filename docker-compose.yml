@@ -20,6 +20,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ClientApp__Origin: "http://localhost:3000"
       GOOGLE_APPLICATION_CREDENTIALS: /app/firebase-adminsdk.json
+      Database__FirestoreProjectId: "clean-architecture-ariel"
     volumes:
       - ~/secrets/firebase-adminsdk.json:/app/firebase-adminsdk.json
     ports:

@@ -16,7 +16,7 @@ This repository contains a layered .NET 10.0 Web API implementing a simple user 
    - Implements application interfaces (e.g., `IUserRepository`).
 - `clean-architecture/WebAPI` – ASP.NET Core Web API:
    - Controllers, global exception filter, DI wiring, and Swagger.
-   - Configurable persistence (in‑memory or SQL Server).
+   - Configurable persistence (in-memory, PostgreSQL, or Firestore via Google Cloud Firestore).
 - `clean-architecture/Tests` – Test projects:
    - `Application.Tests`, `Infrastructure.Tests`, `WebAPI.Tests` using xUnit and Microsoft Testing Platform.
 
@@ -154,6 +154,32 @@ To use this setup:
    ```
 
 The WebAPI container will use the mounted service account file for Firebase Admin operations, including seeding the initial admin user when configured.
+
+### Database providers (InMemory, Postgres, Firestore)
+
+The WebAPI supports multiple database providers behind the same `IUserRepository` abstraction:
+
+- **InMemory** – fast, ephemeral database used by default in the `Testing` environment.
+- **Postgres** – relational database configured via `ConnectionStrings:DbContext` and used by default in development/Docker Compose (see ADR-002).
+- **Firestore** – document database backed by Google Cloud Firestore, configured via `Database:FirestoreProjectId` and `GOOGLE_APPLICATION_CREDENTIALS`.
+
+Provider selection is controlled by the `Database:Provider` configuration value (see ADR-015):
+
+```json
+{
+  "UseInMemoryDB": "false",
+  "ConnectionStrings": {
+    "DbContext": "Host=localhost;Port=5432;Database=cleanarchitecture;Username=appuser;Password=devpassword;"
+  },
+  "Database": {
+    "Provider": "Postgres", // or "InMemory" or "Firestore"
+    "FirestoreProjectId": "your-firestore-project-id"
+  }
+}
+```
+
+- In the `Testing` environment, the application always uses the in-memory provider, regardless of `Database:Provider`.
+- In other environments, when `Database:Provider` is set, it selects between `InMemory`, `Postgres`, and `Firestore` without changing application or domain code.
 
 ### Test authentication in `WebAPI.Tests`
 
