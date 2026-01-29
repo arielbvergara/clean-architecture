@@ -167,7 +167,6 @@ The `WebAPI.Tests` project uses a lightweight test authentication handler (`Test
 
 This setup allows integration tests to exercise authentication and record-ownership behavior without depending on a real identity provider, while keeping a clear separation from production authentication flows.
 
-### Run with Docker Compose (PostgreSQL + WebAPI)
 
 From the repository root, you can start the API and a PostgreSQL database using Docker Compose:
 
@@ -188,3 +187,54 @@ To stop the environment:
 ```bash
 docker compose down
 ```
+
+## Monitoring with Sentry
+
+The WebAPI integrates with Sentry.io for error and performance monitoring while keeping the Domain and Application layers free of Sentry-specific dependencies.
+
+### Configuration
+
+Sentry is configured via the `Sentry` section in `clean-architecture/WebAPI/appsettings*.json` (or equivalent environment variables):
+
+- `Sentry:Enabled` – `true` to enable Sentry, `false` to disable it.
+- `Sentry:Dsn` – the Sentry Data Source Name for this application (do **not** commit real DSNs to source control).
+- `Sentry:Environment` – logical environment name (for example, `Development`, `Testing`, `Staging`, `Production`).
+- `Sentry:TracesSampleRate` – fraction (0.0–1.0) controlling how many HTTP requests are captured for performance tracing.
+
+Example environment variable configuration for local development:
+
+```bash
+export Sentry__Enabled=true
+export Sentry__Dsn={{SENTRY_DSN}}
+export Sentry__Environment=Development
+export Sentry__TracesSampleRate=0.2
+```
+
+Replace `{{SENTRY_DSN}}` with your actual DSN from Sentry or inject it via your preferred secret management solution.
+
+### Behavior and architecture
+
+- Sentry is initialized in `WebAPI/Program.cs` via a small configuration helper that:
+  - Reads the `Sentry` configuration section.
+  - Enables Sentry only when `Sentry:Enabled` is `true`.
+  - Adds Sentry’s ASP.NET Core integration and optional request tracing middleware.
+- The `Infrastructure` layer provides a `SentryObservabilityService` implementation of `IObservabilityService` which:
+  - Logs warnings and errors via `ILogger`.
+  - Forwards errors and selected warnings to Sentry when the Sentry SDK is enabled.
+- Domain and Application layers depend only on the `IObservabilityService` abstraction and remain unaware of Sentry types.
+
+### Verifying Sentry locally
+
+1. Configure Sentry via environment variables as shown above.
+2. Run the WebAPI project:
+
+   ```bash
+   dotnet run --project clean-architecture/WebAPI/WebAPI.csproj
+   ```
+
+3. Trigger a controlled test error (for example, by temporarily throwing an exception in a dev-only endpoint) and confirm that the event appears in your Sentry project with route and environment context.
+
+The `WebAPI.Tests` project includes integration tests that:
+
+- Verify `/health` responds successfully when Sentry is disabled.
+- Verify the Sentry hub is registered and the application still serves `/health` when Sentry is enabled via configuration.
