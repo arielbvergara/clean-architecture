@@ -1,4 +1,3 @@
-using System;
 using Application.Interfaces;
 using Google.Cloud.Firestore;
 using Infrastructure.Data;
@@ -46,7 +45,7 @@ public static class DatabaseConfiguration
                 var connectionString = databaseProviderOptions?.ConnectionString
                                        ?? configuration.GetConnectionString("DbContext")
                                        ?? throw new InvalidOperationException(
-                                           "PostgreSQL connection string is missing for the configured database provider.");
+                                           "PostgresSQL connection string is missing for the configured database provider.");
 
                 services.AddPostgresDatabase(connectionString);
                 return services;
@@ -62,7 +61,7 @@ public static class DatabaseConfiguration
                         "Firestore database provider is configured but Database:FirestoreProjectId is missing.");
                 }
 
-                services.AddSingleton(provider => FirestoreDb.Create(projectId));
+                services.AddSingleton(_ => FirestoreDb.Create(projectId));
                 services.AddScoped<IFirestoreUserDataStore, FirestoreUserDataStore>();
 
                 // Override the default EF-based repository registration when Firestore is selected
@@ -85,10 +84,10 @@ public static class DatabaseConfiguration
         }
         else
         {
-            // Use PostgreSQL as the real database when not using the in-memory provider
+            // Use PostgresSQL as the real database when not using the in-memory provider
             var connectionString = configuration.GetConnectionString("DbContext")
                                    ?? throw new InvalidOperationException(
-                                       "PostgreSQL connection string 'DbContext' is missing.");
+                                       "PostgresSQL connection string 'DbContext' is missing.");
 
             services.AddPostgresDatabase(connectionString);
         }

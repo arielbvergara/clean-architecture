@@ -6,14 +6,9 @@ using Infrastructure.Data.Firestore;
 
 namespace Infrastructure.Repositories;
 
-public sealed class FirestoreUserRepository : IUserRepository
+public sealed class FirestoreUserRepository(IFirestoreUserDataStore dataStore) : IUserRepository
 {
-    private readonly IFirestoreUserDataStore _dataStore;
-
-    public FirestoreUserRepository(IFirestoreUserDataStore dataStore)
-    {
-        _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
-    }
+    private readonly IFirestoreUserDataStore _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
 
     public Task<User?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default)
     {

@@ -1,19 +1,18 @@
 using System.Reflection;
+using Application.Dtos.User;
 using Domain.Entities;
 using Domain.ValueObject;
 using Google.Cloud.Firestore;
-using Application.Dtos.User;
 
 namespace Infrastructure.Data.Firestore;
 
-public sealed class FirestoreUserDataStore : IFirestoreUserDataStore
+public sealed class FirestoreUserDataStore(FirestoreDb database) : IFirestoreUserDataStore
 {
-    private static readonly ConstructorInfo UserRehydrationConstructor = typeof(User)
+    private static readonly ConstructorInfo _userRehydrationConstructor = typeof(User)
         .GetConstructor(
             BindingFlags.NonPublic | BindingFlags.Instance,
             binder: null,
-            new[]
-            {
+            [
                 typeof(UserId),
                 typeof(Email),
                 typeof(UserName),
@@ -22,21 +21,16 @@ public sealed class FirestoreUserDataStore : IFirestoreUserDataStore
                 typeof(DateTime),
                 typeof(bool),
                 typeof(DateTime?)
-            },
+            ],
             modifiers: null
         )
         ?? throw new InvalidOperationException("User rehydration constructor not found.");
 
-    private static readonly PropertyInfo UpdatedAtProperty = typeof(User)
+    private static readonly PropertyInfo _updatedAtProperty = typeof(User)
         .GetProperty("UpdatedAt", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
         ?? throw new InvalidOperationException("User.UpdatedAt property not found.");
 
-    private readonly FirestoreDb _database;
-
-    public FirestoreUserDataStore(FirestoreDb database)
-    {
-        _database = database ?? throw new ArgumentNullException(nameof(database));
-    }
+    private readonly FirestoreDb _database = database ?? throw new ArgumentNullException(nameof(database));
 
     public async Task<User?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default)
     {
@@ -230,22 +224,21 @@ public sealed class FirestoreUserDataStore : IFirestoreUserDataStore
         var name = UserName.Create(document.Name);
         var externalAuthId = ExternalAuthIdentifier.Create(document.ExternalAuthId);
 
-        var user = (User)UserRehydrationConstructor.Invoke(
-            new object[]
-            {
-                id,
+        var user = (User)_userRehydrationConstructor.Invoke(
+        [
+            id,
                 email,
                 name,
                 externalAuthId,
                 document.Role,
                 document.CreatedAt,
                 document.IsDeleted,
-                document.DeletedAt
-            });
+                document.DeletedAt!
+        ]);
 
         if (document.UpdatedAt is not null)
         {
-            UpdatedAtProperty.SetValue(user, document.UpdatedAt);
+            _updatedAtProperty.SetValue(user, document.UpdatedAt);
         }
 
         return user;

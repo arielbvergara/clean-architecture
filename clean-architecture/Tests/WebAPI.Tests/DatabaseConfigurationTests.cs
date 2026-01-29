@@ -1,4 +1,3 @@
-using System;
 using Application.Interfaces;
 using FluentAssertions;
 using Google.Cloud.Firestore;
@@ -15,14 +14,9 @@ namespace WebAPI.Tests;
 
 public sealed class DatabaseConfigurationTests
 {
-    private sealed class FakeHostEnvironment : IHostEnvironment
+    private sealed class FakeHostEnvironment(string environmentName) : IHostEnvironment
     {
-        public FakeHostEnvironment(string environmentName)
-        {
-            EnvironmentName = environmentName;
-        }
-
-        public string EnvironmentName { get; set; }
+        public string EnvironmentName { get; set; } = environmentName;
 
         // Not used in these tests
         public string ApplicationName { get; set; } = "WebAPI";
@@ -43,7 +37,7 @@ public sealed class DatabaseConfigurationTests
         };
 
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(settings!)
+            .AddInMemoryCollection(settings)
             .Build();
 
         var environment = new FakeHostEnvironment("Development");
@@ -89,7 +83,7 @@ public sealed class DatabaseConfigurationTests
         };
 
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(settings!)
+            .AddInMemoryCollection(settings)
             .Build();
 
         var environment = new FakeHostEnvironment("Testing");
@@ -121,7 +115,7 @@ public sealed class DatabaseConfigurationTests
         };
 
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(settings!)
+            .AddInMemoryCollection(settings)
             .Build();
 
         var environment = new FakeHostEnvironment("Development");
