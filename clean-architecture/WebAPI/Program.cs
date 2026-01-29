@@ -1,6 +1,5 @@
 using Application;
 using Application.Interfaces;
-using Application.UseCases;
 using Infrastructure.Logging;
 using WebAPI.Authentication;
 using WebAPI.Configuration;
