@@ -56,7 +56,8 @@ public sealed class FirestoreUserDataStore : IFirestoreUserDataStore
 
         var document = snapshot.Documents
             .Select(d => d.ConvertTo<UserDocument>())
-            .FirstOrDefault(doc => !doc.IsDeleted);
+            .Where(doc => doc is not null)
+            .FirstOrDefault(doc => !doc!.IsDeleted);
 
         return document is null ? null : MapToDomainUser(document);
     }
@@ -73,7 +74,8 @@ public sealed class FirestoreUserDataStore : IFirestoreUserDataStore
 
         var document = snapshot.Documents
             .Select(d => d.ConvertTo<UserDocument>())
-            .FirstOrDefault(doc => !doc.IsDeleted);
+            .Where(doc => doc is not null)
+            .FirstOrDefault(doc => !doc!.IsDeleted);
 
         return document is null ? null : MapToDomainUser(document);
     }
@@ -88,6 +90,7 @@ public sealed class FirestoreUserDataStore : IFirestoreUserDataStore
 
         var documents = snapshot.Documents
             .Select(d => d.ConvertTo<UserDocument>())
+            .Where(doc => doc is not null)
             .ToList();
 
         IEnumerable<UserDocument> filtered = documents;
@@ -189,7 +192,8 @@ public sealed class FirestoreUserDataStore : IFirestoreUserDataStore
             return null;
         }
 
-        return snapshot.ConvertTo<UserDocument>();
+        var document = snapshot.ConvertTo<UserDocument>();
+        return document ?? null;
     }
 
     private static IEnumerable<UserDocument> ApplyOrdering(
