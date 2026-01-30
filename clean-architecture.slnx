@@ -15,6 +15,7 @@
     <File Path="ADRs\013-standardized-error-handling-and-security-logging.md" />
     <File Path="ADRs\014-security-design-and-threat-model-for-user-endpoints.md" />
     <File Path="ADRs\015-sentry-monitoring-and-observability-integration.md" />
+    <File Path="ADRs\016-admin-user-endpoints-routing-and-controller-separation.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".editorconfig" />
