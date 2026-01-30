@@ -62,7 +62,7 @@ public sealed class FirebaseAdminClient : IFirebaseAdminClient
         try
         {
             // Firebase Admin SDK does not currently expose cancellation tokens on these APIs.
-            userRecord = await _auth.GetUserByEmailAsync(email).ConfigureAwait(false);
+            userRecord = await _auth.GetUserByEmailAsync(email, cancellationToken).ConfigureAwait(false);
         }
         catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.UserNotFound)
         {
@@ -74,7 +74,7 @@ public sealed class FirebaseAdminClient : IFirebaseAdminClient
                 EmailVerified = true,
             };
 
-            userRecord = await _auth.CreateUserAsync(args).ConfigureAwait(false);
+            userRecord = await _auth.CreateUserAsync(args, cancellationToken).ConfigureAwait(false);
         }
 
         if (userRecord is null)
@@ -87,7 +87,7 @@ public sealed class FirebaseAdminClient : IFirebaseAdminClient
             : new Dictionary<string, object>(userRecord.CustomClaims);
 
         if (!existingClaims.TryGetValue(AuthorizationConstants.RoleClaimKey, out var roleValue) ||
-            !string.Equals(roleValue?.ToString(), UserRoleConstants.Admin, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(roleValue.ToString(), UserRoleConstants.Admin, StringComparison.OrdinalIgnoreCase))
         {
             existingClaims[AuthorizationConstants.RoleClaimKey] = UserRoleConstants.Admin;
             await _auth.SetCustomUserClaimsAsync(userRecord.Uid, existingClaims, cancellationToken).ConfigureAwait(false);
