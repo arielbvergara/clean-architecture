@@ -12,6 +12,12 @@ public static class SecurityEventNames
     public const string UserUpdateFailed = "user.update.failed";
     public const string UserDeleted = "user.deleted";
     public const string UserDeleteFailed = "user.delete.failed";
+
+    /// <summary>
+    /// Emitted when an authenticated non-admin principal attempts to access an
+    /// endpoint that is restricted to administrators.
+    /// </summary>
+    public const string AdminEndpointAccessDenied = "admin.endpoint.access.denied";
 }
 
 /// <summary>

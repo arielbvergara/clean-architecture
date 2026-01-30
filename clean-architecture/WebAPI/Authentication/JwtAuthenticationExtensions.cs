@@ -71,6 +71,7 @@ public static class JwtAuthenticationExtensions
 
         // Register custom authorization handlers.
         services.AddScoped<IAuthorizationHandler, OwnsUserHandler>();
+        services.AddScoped<IAuthorizationHandler, AdminOnlyHandler>();
 
         services.AddAuthorization(options =>
         {
@@ -80,12 +81,13 @@ public static class JwtAuthenticationExtensions
                 .RequireAuthenticatedUser()
                 .Build();
 
-            // Policy for endpoints that should only be accessible to administrators. Uses
-            // the IsAdmin() helper, which checks both standard role claims and the
-            // custom "role" claim used by Firebase tokens.
+            // Policy for endpoints that should only be accessible to administrators. The
+            // AdminOnlyHandler uses the IsAdmin() helper (which checks both standard role
+            // claims and the custom "role" claim) and emits security events when an
+            // authenticated non-admin attempts to access an admin-only endpoint.
             options.AddPolicy(AuthorizationPoliciesConstants.AdminOnly, policy =>
             {
-                policy.RequireAssertion(context => context.User.IsAdmin());
+                policy.Requirements.Add(new AdminOnlyRequirement());
             });
 
             // Convenience policy for endpoints that simply require any authenticated user.

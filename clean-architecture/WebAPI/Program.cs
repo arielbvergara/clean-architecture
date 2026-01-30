@@ -17,6 +17,9 @@ public class Program
 
         var builder = WebApplication.CreateBuilder(args);
 
+        // Observability and monitoring configuration (Sentry, etc.)
+        var isSentryEnabled = builder.ConfigureSentry();
+
         // Add services to the container.
         builder.Services.AddControllers(options => { options.Filters.Add<GlobalExceptionFilter>(); });
 
@@ -40,6 +43,9 @@ public class Program
 
         // Security event notifier
         builder.Services.AddScoped<ISecurityEventNotifier, LoggingSecurityEventNotifier>();
+
+        // Application-level observability service (logs + optional Sentry)
+        builder.Services.AddScoped<IObservabilityService, SentryObservabilityService>();
 
         // Admin user seeding configuration and services
         builder.Services.Configure<AdminUserOptions>(
@@ -72,6 +78,12 @@ public class Program
         // Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // Sentry performance tracing (when enabled via configuration)
+        if (isSentryEnabled)
+        {
+            app.UseSentryTracing();
+        }
 
         app.MapControllers();
 
