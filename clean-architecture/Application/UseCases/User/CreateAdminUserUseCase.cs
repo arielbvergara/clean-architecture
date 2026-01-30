@@ -15,7 +15,7 @@ public class CreateAdminUserUseCase(
         try
         {
             var email = Email.Create(request.Email);
-            
+
             // Check if user already exists
             var existingUser = await userRepository.GetByEmailAsync(email, cancellationToken);
             if (existingUser is not null)
@@ -23,10 +23,10 @@ public class CreateAdminUserUseCase(
                 // If user exists, ensure they have admin claims in identity provider
                 await identityProviderService.EnsureAdminUserAsync(
                     request.Email,
-                    request.Password, 
+                    request.Password,
                     request.Name,
                     cancellationToken);
-                
+
                 return Result<UserResponse, AppException>.Ok(existingUser.ToUserResponse());
             }
 
@@ -42,7 +42,7 @@ public class CreateAdminUserUseCase(
 
             // Create admin user in domain
             var adminUser = Domain.Entities.User.CreateAdmin(email, name, externalAuthId);
-            
+
             await userRepository.AddAsync(adminUser, cancellationToken);
 
             return Result<UserResponse, AppException>.Ok(adminUser.ToUserResponse());
