@@ -28,7 +28,7 @@ public class UserAccessControlTests(CustomWebApplicationFactory factory)
 
         // Act
         // Attempt to access an arbitrary user ID as a regular user
-        var response = await _userClient.GetAsync($"/api/User/{targetUserId}");
+        var response = await _userClient.GetAsync($"/api/admin/User/{targetUserId}");
 
         // Assert
         // ADR-014: "Unauthorized or forbidden callers receive generic responses"
@@ -44,7 +44,7 @@ public class UserAccessControlTests(CustomWebApplicationFactory factory)
         var targetUserId = Guid.NewGuid();
 
         // Act
-        var response = await _anonClient.GetAsync($"/api/User/{targetUserId}");
+        var response = await _anonClient.GetAsync($"/api/admin/User/{targetUserId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -57,7 +57,7 @@ public class UserAccessControlTests(CustomWebApplicationFactory factory)
         var targetUserId = Guid.NewGuid();
 
         // Act
-        var response = await _adminClient.GetAsync($"/api/User/{targetUserId}");
+        var response = await _adminClient.GetAsync($"/api/admin/User/{targetUserId}");
 
         // Assert
         // Admin should be allowed to access.
@@ -74,7 +74,7 @@ public class UserAccessControlTests(CustomWebApplicationFactory factory)
         var targetEmail = "somebody@example.com";
 
         // Act
-        var response = await _userClient.GetAsync($"/api/User/email/{targetEmail}");
+        var response = await _userClient.GetAsync($"/api/admin/User/email/{targetEmail}");
 
         // Assert
         Assert.True(response.StatusCode is HttpStatusCode.Forbidden,
@@ -88,7 +88,7 @@ public class UserAccessControlTests(CustomWebApplicationFactory factory)
         var targetEmail = "somebody@example.com";
 
         // Act
-        var response = await _anonClient.GetAsync($"/api/User/email/{targetEmail}");
+        var response = await _anonClient.GetAsync($"/api/admin/User/email/{targetEmail}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -138,8 +138,8 @@ public class UserAccessControlTests(CustomWebApplicationFactory factory)
         var randomId1 = Guid.NewGuid();
 
         // Act
-        var response1 = await _userClient.GetAsync($"/api/User/{randomId1}");
-        var response2 = await _otherClient.GetAsync($"/api/User/{randomId1}"); // Different user, same target
+        var response1 = await _userClient.GetAsync($"/api/admin/User/{randomId1}");
+        var response2 = await _otherClient.GetAsync($"/api/admin/User/{randomId1}"); // Different user, same target
 
         // Assert
         // Both requestors are non-admins targeting a random ID.

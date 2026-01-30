@@ -26,7 +26,7 @@ public class UserControllerGetUsersTests : IClassFixture<CustomWebApplicationFac
         var client = _factory.CreateClient();
         const string externalId = "non-admin-external";
 
-        var request = new HttpRequestMessage(HttpMethod.Get, "/api/User");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/admin/User");
         request.Headers.Add("X-Test-Only-ExternalId", externalId);
 
         // Act
@@ -68,7 +68,7 @@ public class UserControllerGetUsersTests : IClassFixture<CustomWebApplicationFac
             await context.SaveChangesAsync(CancellationToken.None);
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Get, "/api/User?pageNumber=1&pageSize=10");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/admin/User?pageNumber=1&pageSize=10");
         request.Headers.Add("X-Test-Only-ExternalId", adminExternalId);
         request.Headers.Add("X-Test-Only-Role", "Admin");
 
@@ -131,7 +131,7 @@ public class UserControllerGetUsersTests : IClassFixture<CustomWebApplicationFac
             await context.SaveChangesAsync(CancellationToken.None);
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Get, "/api/User?isDeleted=true&pageNumber=1&pageSize=10");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/admin/User?isDeleted=true&pageNumber=1&pageSize=10");
         request.Headers.Add("X-Test-Only-ExternalId", adminExternalId);
         request.Headers.Add("X-Test-Only-Role", "Admin");
 

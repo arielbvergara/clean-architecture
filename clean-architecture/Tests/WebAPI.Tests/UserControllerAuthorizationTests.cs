@@ -76,7 +76,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
         var userId = Guid.NewGuid();
 
         // Act
-        var response = await client.GetAsync($"/api/User/{userId}");
+        var response = await client.GetAsync($"/api/admin/User/{userId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -105,7 +105,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
             userId = user.Id.Value;
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{userId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/admin/User/{userId}");
         request.Headers.Add("X-Test-Only-ExternalId", externalId);
 
         // Act
@@ -146,7 +146,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
             ownerUserId = ownerUser.Id.Value;
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{ownerUserId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/admin/User/{ownerUserId}");
         request.Headers.Add("X-Test-Only-ExternalId", attackerExternalId);
 
         // Act
@@ -187,7 +187,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
             ownerUserId = ownerUser.Id.Value;
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{ownerUserId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/admin/User/{ownerUserId}");
         request.Headers.Add("X-Test-Only-ExternalId", adminExternalId);
         request.Headers.Add("X-Test-Only-Role", "Admin");
 
@@ -244,7 +244,7 @@ public class UserControllerAuthorizationTests : IClassFixture<CustomWebApplicati
             targetUserId = user.Id.Value;
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/User/{targetUserId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/api/admin/User/{targetUserId}");
         request.Headers.Add("X-Test-Only-ExternalId", externalId);
 
         // Act
