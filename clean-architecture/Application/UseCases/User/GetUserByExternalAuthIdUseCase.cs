@@ -18,7 +18,7 @@ public class GetUserByExternalAuthIdUseCase(IUserRepository userRepository)
             if (user is null)
                 return Result<UserResponse, AppException>.Fail(new NotFoundException($"User with external auth ID not found"));
 
-            return Result<UserResponse, AppException>.Ok(MapToResponse(user));
+            return Result<UserResponse, AppException>.Ok(user.ToUserResponse());
         }
         catch (AppException ex)
         {
@@ -32,18 +32,5 @@ public class GetUserByExternalAuthIdUseCase(IUserRepository userRepository)
         {
             return Result<UserResponse, AppException>.Fail(new InfraException("An unexpected error occurred", ex));
         }
-    }
-
-    private static UserResponse MapToResponse(Domain.Entities.User user)
-    {
-        return new UserResponse(
-            user.Id.Value,
-            user.Email.Value,
-            user.Name.Value,
-            user.ExternalAuthId.Value,
-            user.CreatedAt,
-            user.UpdatedAt,
-            user.IsDeleted
-        );
     }
 }
