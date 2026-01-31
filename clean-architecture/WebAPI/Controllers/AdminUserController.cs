@@ -26,11 +26,60 @@ public class AdminUserController(
     GetUserByEmailUseCase getUserByEmailUseCase,
     UpdateUserNameUseCase updateUserNameUseCase,
     DeleteUserUseCase deleteUserUseCase,
+    CreateAdminUserUseCase createAdminUserUseCase,
     ILogger<AdminUserController> logger,
     ISecurityEventNotifier securityEventNotifier)
     : ControllerBase
 {
     private const string AdminUserRoutePrefix = "api/admin/User";
+
+    [HttpPost]
+    [EnableRateLimiting(RateLimitingPolicies.Fixed)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CreateAdminUser([FromBody] CreateAdminUserDto dto, CancellationToken cancellationToken)
+    {
+        var result = await createAdminUserUseCase.ExecuteAsync(
+            new CreateAdminUserRequest(dto.Email, dto.DisplayName, dto.Password),
+            cancellationToken);
+
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+            logger.LogError(error.InnerException, "Failed to create admin user: {Message}", error.Message);
+
+            await securityEventNotifier.NotifyAsync(
+                SecurityEventNames.UserCreateFailed,
+                null,
+                SecurityEventOutcomes.Failure,
+                HttpContext.TraceIdentifier,
+                new Dictionary<string, string?>
+                {
+                    { "Route", HttpContext.Request.Path },
+                    { "ExceptionType", error.Type.ToString() }
+                },
+                cancellationToken);
+
+            return this.ToActionResult(error, HttpContext.TraceIdentifier);
+        }
+
+        var adminUser = result.Value!;
+
+        await securityEventNotifier.NotifyAsync(
+            SecurityEventNames.UserCreated,
+            adminUser.Id.ToString(),
+            SecurityEventOutcomes.Success,
+            HttpContext.TraceIdentifier,
+            new Dictionary<string, string?>
+            {
+                { "Route", HttpContext.Request.Path }
+            },
+            cancellationToken);
+
+        return Ok(adminUser);
+    }
 
     /// <summary>
     /// Gets a paginated list of users. Restricted to administrators.
@@ -83,6 +132,7 @@ public class AdminUserController(
     /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpGet("{id:guid}")]
+    [EnableRateLimiting(RateLimitingPolicies.Fixed)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -108,6 +158,7 @@ public class AdminUserController(
     /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpGet("email/{email}")]
+    [EnableRateLimiting(RateLimitingPolicies.Fixed)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -133,6 +184,7 @@ public class AdminUserController(
     /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpPut("{id:guid}/name")]
+    [EnableRateLimiting(RateLimitingPolicies.Fixed)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -188,6 +240,7 @@ public class AdminUserController(
     /// This endpoint is restricted to administrators.
     /// </remarks>
     [HttpDelete("{id:guid}")]
+    [EnableRateLimiting(RateLimitingPolicies.Fixed)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

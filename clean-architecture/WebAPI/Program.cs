@@ -52,6 +52,7 @@ public class Program
             builder.Configuration.GetSection(AdminUserOptions.SectionName)
         );
         builder.Services.AddSingleton<IFirebaseAdminClient, FirebaseAdminClient>();
+        builder.Services.AddSingleton<IIdentityProviderService>(sp => sp.GetRequiredService<IFirebaseAdminClient>());
         builder.Services.AddScoped<IAdminUserBootstrapper, AdminUserBootstrapper>();
 
         var app = builder.Build();

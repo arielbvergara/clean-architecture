@@ -14,6 +14,7 @@ public static class DependencyInjection
 
         // User use cases
         services.AddScoped<CreateUserUseCase>();
+        services.AddScoped<CreateAdminUserUseCase>();
         services.AddScoped<GetUserByIdUseCase>();
         services.AddScoped<GetUserByEmailUseCase>();
         services.AddScoped<UpdateUserNameUseCase>();

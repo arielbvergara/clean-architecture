@@ -1,6 +1,4 @@
-using Application.Interfaces;
-using Domain.Entities;
-using Domain.ValueObject;
+using Application.UseCases.User;
 using Microsoft.Extensions.Options;
 using WebAPI.Configuration;
 
@@ -11,8 +9,7 @@ namespace WebAPI.Authentication;
 /// Firebase admin provisioning with creation of a corresponding domain user.
 /// </summary>
 public sealed class AdminUserBootstrapper(
-    IFirebaseAdminClient firebaseAdminClient,
-    IUserRepository userRepository,
+    CreateAdminUserUseCase createAdminUserUseCase,
     IOptions<AdminUserOptions> options,
     IHostEnvironment hostEnvironment,
     ILogger<AdminUserBootstrapper> logger)
@@ -55,38 +52,23 @@ public sealed class AdminUserBootstrapper(
             }
         }
 
-        var email = Email.Create(_options.Email);
-
-        // If the admin user already exists in our database, we only need to ensure
-        // the identity provider has the correct admin claims.
-        var existingUser = await userRepository.GetByEmailAsync(email, cancellationToken);
-        if (existingUser is not null)
-        {
-            logger.LogInformation("Admin user with email {Email} already exists. Ensuring admin claims in identity provider.",
-                _options.Email);
-
-            await firebaseAdminClient.EnsureAdminUserAsync(
-                _options.Email,
-                _options.Password,
-                _options.DisplayName,
-                cancellationToken);
-
-            return;
-        }
-
         logger.LogInformation("Seeding initial admin user with email {Email}.", _options.Email);
 
-        string externalId = await firebaseAdminClient.EnsureAdminUserAsync(
+        var request = new Application.Dtos.User.CreateAdminUserRequest(
             _options.Email,
-            _options.Password,
             _options.DisplayName,
-            cancellationToken);
+            _options.Password);
 
-        var name = UserName.Create(_options.DisplayName);
-        var externalAuthId = ExternalAuthIdentifier.Create(externalId);
+        var result = await createAdminUserUseCase.ExecuteAsync(request, cancellationToken);
 
-        var adminUser = User.CreateAdmin(email, name, externalAuthId);
-        await userRepository.AddAsync(adminUser, cancellationToken);
+        if (result.IsFailure)
+        {
+            // The CreateAdminUserUseCase handles the "user already exists" case by
+            // ensuring admin claims in the identity provider and returning success.
+            // Therefore, any failure here represents a genuine error condition.
+            logger.LogError(result.Error!.InnerException, "Admin user seeding failed: {Error}", result.Error.Message);
+            throw new InvalidOperationException($"Admin user seeding failed: {result.Error.Message}");
+        }
 
         logger.LogInformation("Admin user seeding completed for email {Email}.", _options.Email);
     }

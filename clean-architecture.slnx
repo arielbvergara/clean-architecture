@@ -16,6 +16,7 @@
     <File Path="ADRs\014-security-design-and-threat-model-for-user-endpoints.md" />
     <File Path="ADRs\015-sentry-monitoring-and-observability-integration.md" />
     <File Path="ADRs\016-admin-user-endpoints-routing-and-controller-separation.md" />
+    <File Path="ADRs\017-admin-user-creation-endpoint-and-shared-usecase.md" />
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".editorconfig" />
