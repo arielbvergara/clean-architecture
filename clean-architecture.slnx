@@ -23,6 +23,7 @@
     <File Path=".github\workflows\pr-ci.yml" />
     <File Path=".gitignore" />
     <File Path="AGENTS.md" />
+    <File Path="CODEOWNERS" />
     <File Path="docker-compose.yml" />
     <File Path="Dockerfile" />
     <File Path="mcp.json" />

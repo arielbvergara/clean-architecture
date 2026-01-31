@@ -1,0 +1,5 @@
+# CODEOWNERS
+# Default owner for everything in this repository.
+# All paths are owned by @arielbvergara, the primary admin.
+
+* @arielbvergara
