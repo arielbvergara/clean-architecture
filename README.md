@@ -1,207 +1,103 @@
-# Clean Architecture .NET Sample
+# Clean Architecture .NET Boilerplate
 
-This repository contains a layered .NET 10.0 Web API implementing a simple user management domain using Clean Architecture principles.
+This repository is a **.NET 10.0 Clean Architecture boilerplate** – a base project for creating new services that will eventually be published as a reusable GitHub template.
 
-## Project Structure
+It implements a simple **user CRUD** with extra functionality around **user management, roles, authentication and authorization**, with **security as a first‑class concern**.
 
-- `clean-architecture.slnx` – Solution file targeting `net10.0`.
-- `clean-architecture/Domain` – Core domain model:
-   - Entities, value objects, and primitives (e.g., `Result<T, TE>`).
-   - No dependencies on other layers; persistence-agnostic.
-- `clean-architecture/Application` – Application layer:
-   - Use cases, DTOs, interfaces (ports), and application exceptions.
-   - Uses `Result<..., AppException>` to represent success/failure.
-- `clean-architecture/Infrastructure` – Infrastructure layer:
-   - EF Core `AppDbContext`, entity configurations, repositories.
-   - Implements application interfaces (e.g., `IUserRepository`).
-- `clean-architecture/WebAPI` – ASP.NET Core Web API:
-   - Controllers, global exception filter, DI wiring, and Swagger.
-   - Configurable persistence (in‑memory or SQL Server).
-- `clean-architecture/Tests` – Test projects:
-   - `Application.Tests`, `Infrastructure.Tests`, `WebAPI.Tests` using xUnit and Microsoft Testing Platform.
+## Technologies
 
-## Architecture Decision Records (ADRs)
+- **.NET 10.0 Web API** following Clean Architecture (Domain, Application, Infrastructure, WebAPI).
+- **PostgreSQL** as the primary relational database, usually run via Docker Compose.
+- **Firebase Authentication (JWT Bearer)** as the default identity provider, fully abstracted behind the WebAPI so Domain/Application stay provider‑agnostic.
+- **Docker & Docker Compose** for a reproducible local environment (WebAPI + Postgres with a single command).
+- **Sentry** for error and performance monitoring, wired into the WebAPI/Infrastructure layers via an observability abstraction.
 
-Architecture decisions are documented under the `ADRs/` directory. Key ADRs related to authentication, authorization, and user lifecycle:
+Testing and operational choices (Microsoft Testing Platform, security headers, rate limiting, CI dependency scanning, etc.) are captured in the ADRs.
 
-- `001-use-microsoft-testing-platform-runner.md` – adopt Microsoft Testing Platform as the test runner.
-- `002-postgres-and-docker-compose.md` – configure PostgreSQL and Docker Compose for local development.
-- `003-webapi-authentication-and-authorization-for-user-endpoints.md` – initial WebAPI authZ model for `UserController`.
-- `004-guid-identity-and-authentication-provider.md` – defines the identity provider abstraction and how JWT-based authentication is integrated without leaking provider specifics into the Domain/Application layers.
-- `005-webapi-auth-refinements-jwt-policies-me-endpoints.md` – refine JWT config for Firebase, add policies/OwnsUser handler, and introduce `/me` endpoints and failure-path tests.
-- `006-user-role-and-soft-delete-lifecycle.md` – add `Role`, `IsDeleted`, `DeletedAt` to `User` and implement a soft-delete lifecycle for users.
-- `007-admin-bootstrap-and-firebase-admin-integration.md` – define the secure, idempotent admin user bootstrap process and Firebase Admin integration owned by the WebAPI layer.
-- `008-admin-only-user-id-email-endpoints.md` – make id/email-based user management endpoints admin-only and reserve `/me` routes for self-service operations.
-- `009-automated-dependency-management-with-dependabot.md` – configure Dependabot to keep NuGet packages, GitHub Actions, and Docker images up to date.
-- `010-hardened-production-configuration.md` – introduce secure-by-default production configuration for CORS, `AllowedHosts`, and environment-specific settings.
-- `011-security-headers-and-rate-limiting.md` – add standardized security headers and ASP.NET Core rate limiting policies (`Fixed`/`Strict`) to harden the WebAPI surface.
-- `012-supply-chain-and-dependency-scanning-ci.md` – add a `security-and-deps` CI job for `dotnet list package` vulnerability scans and SBOM generation, with guardrails.
-- `013-standardized-error-handling-and-security-logging.md` – define standardized API error envelopes, correlation IDs, and structured security logging aligned with OWASP A09/A10.
-- `014-security-design-and-threat-model-for-user-endpoints.md` – canonical security design and threat model for user endpoints, defining roles, ownership, and enumeration resistance mechanisms.
+## What you get
 
-## Getting Started
+- A ready‑to‑use **starting point for new APIs** built with Clean Architecture.
+- A secure **user CRUD** with:
+  - User create/read/update/delete.
+  - Roles and admin workflows.
+  - Authentication and authorization built on top of Firebase ID tokens.
+  - Hardened configuration for production (CORS, hosts, security headers, rate limiting).
+- Integrated **monitoring with Sentry** and opinionated logging and error handling.
 
-### Prerequisites
+## Architecture decisions
 
-- .NET SDK 10.0 (or later)
-- Optional: SQL Server instance if not using the in‑memory database
+Key architectural choices are documented under `ADRs/` and include, among others:
 
-### Build
+- PostgreSQL + Docker Compose for local/dev environments.
+- JWT/Firebase authentication, `/me` self‑service endpoints, and admin‑only management routes.
+- User role and soft‑delete lifecycle.
+- Admin bootstrap flow and Firebase Admin SDK integration.
+- Security headers, rate limiting, hardened production configuration.
+- Sentry integration and standardized error handling/logging.
+
+When adapting this boilerplate for a new service, review the ADRs to understand the default security and operations posture before changing anything.
+
+## Running the project (local development)
+
+### 1. Prerequisites
+
+- [.NET SDK 10.0](https://dotnet.microsoft.com/) or later.
+- [Docker](https://www.docker.com/) and Docker Compose.
+- A Firebase project (if you want to exercise authenticated endpoints).
+- Optional: a Sentry project (if you want monitoring enabled locally).
+
+### 2. Quick start with Docker Compose (WebAPI + Postgres)
 
 From the repository root:
-
-```bash
-dotnet build clean-architecture.slnx
-```
-
-### Authentication & Authorization
-
-The Web API is secured using ASP.NET Core authentication/authorization:
-
-- **JWT Bearer authentication** is configured in `clean-architecture/WebAPI/Program.cs`.
-- Configuration values are read from `clean-architecture/WebAPI/appsettings*.json` under the `Authentication` section:
-  - `Authentication:Authority` – the issuer/authority for JWT tokens (e.g., your OIDC / Entra ID authority URL).
-  - `Authentication:Audience` – the API audience / resource identifier expected in the token.
-- A **fallback authorization policy** requires all endpoints to be authenticated by default.
-- The `UserController` is decorated with `[Authorize]`, and additional ownership checks ensure that users can only access their own user record unless they are in an elevated role.
-
-For local development, you can:
-
-- Use real JWTs from an identity provider (for example, Firebase Authentication) and configure `Authentication:Authority` / `Authentication:Audience` accordingly.
-- Or use test-only authentication via the WebAPI tests (see below) without hitting a real IdP.
-
-### Using Firebase Authentication (email/password)
-
-This project can be used with Firebase Authentication as the identity provider. For the Firebase project `clean-architecture-ariel`:
-
-- Set in `clean-architecture/WebAPI/appsettings.Development.json`:
-  - `Authentication:Authority = "https://securetoken.google.com/clean-architecture-ariel"`
-  - `Authentication:Audience = "clean-architecture-ariel"`
-- On the client side (or in Postman), obtain a Firebase **ID token** for an authenticated user and send it as:
-  - `Authorization: Bearer <firebase-id-token>`
-- When creating the domain user via `POST /api/User`, use the Firebase UID (the `sub` claim from the token) as `externalAuthId`:
-
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name",
-  "externalAuthId": "<firebase-uid-from-token-sub>"
-}
-```
-
-The WebAPI uses the `sub` claim to resolve the current user and enforce record ownership, so this mapping keeps authentication and authorization aligned.
-
-### Configuring Firebase Admin credentials for admin bootstrap
-
-To support the admin user bootstrap flow (see ADR 007), the WebAPI uses the Firebase Admin SDK with **Application Default Credentials (ADC)**. You must provide a Firebase service account JSON key file and point `GOOGLE_APPLICATION_CREDENTIALS` at it.
-
-> These steps are for local development and Docker-based environments only. Do not commit service account JSON files to source control.
-
-#### 1. Create/download the Firebase Admin SDK service account JSON
-
-1. In the Firebase console for your project (e.g., `clean-architecture-ariel`), go to **Project settings → Service accounts**.
-2. Click **Generate new private key** for the Firebase Admin SDK service account.
-3. Download the JSON file and save it outside the repository, for example:
-   - `~/secrets/firebase-adminsdk.json`
-
-#### 2. Configure local development (dotnet run)
-
-`WebAPI` uses the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to locate the service account JSON. In development:
-
-- `clean-architecture/WebAPI/Properties/launchSettings.json` is preconfigured with:
-  - `"GOOGLE_APPLICATION_CREDENTIALS": "~/secrets/firebase-adminsdk.json"`
-- `Program.cs` expands `~` to your user profile directory on startup, so the JSON file must exist at that path.
-
-To run locally with admin bootstrap enabled:
-
-1. Place the downloaded JSON at `~/secrets/firebase-adminsdk.json`.
-2. Ensure `GOOGLE_APPLICATION_CREDENTIALS` is set (either via `launchSettings.json` or your shell):
-
-   ```bash
-   export GOOGLE_APPLICATION_CREDENTIALS=~/secrets/firebase-adminsdk.json
-   ```
-
-3. Configure `AdminUser` in `clean-architecture/WebAPI/appsettings.Development.json` or via environment variables (see ADR 007 for details).
-4. Run the Web API:
-
-   ```bash
-   dotnet run --project clean-architecture/WebAPI/WebAPI.csproj
-   ```
-
-#### 3. Configure Docker Compose
-
-The provided `docker-compose.yml` mounts the same JSON file into the WebAPI container and sets `GOOGLE_APPLICATION_CREDENTIALS` accordingly:
-
-- Volume mount:
-
-  ```yaml
-  - ~/secrets/firebase-adminsdk.json:/app/firebase-adminsdk.json
-  ```
-
-- Environment variable:
-
-  ```yaml
-  GOOGLE_APPLICATION_CREDENTIALS: /app/firebase-adminsdk.json
-  ```
-
-To use this setup:
-
-1. Ensure `~/secrets/firebase-adminsdk.json` exists on the host machine.
-2. Start the stack:
-
-   ```bash
-   docker compose up --build
-   ```
-
-The WebAPI container will use the mounted service account file for Firebase Admin operations, including seeding the initial admin user when configured.
-
-### Test authentication in `WebAPI.Tests`
-
-The `WebAPI.Tests` project uses a lightweight test authentication handler (`TestAuthHandler`) wired via `CustomWebApplicationFactory`:
-
-- **TEST-ONLY** headers are used to simulate identities and roles when running tests:
-  - `X-Test-Only-ExternalId` is mapped to the `sub` claim.
-  - `X-Test-Only-Role` (for example, `Admin`) is mapped to a role claim.
-- These headers are only honored inside the in-memory test host configured by `CustomWebApplicationFactory`; the real WebAPI uses JWT bearer tokens and ignores these headers entirely.
-- The application then maps this external identifier to the domain user via `ExternalAuthId` and `GetUserByExternalAuthIdUseCase`.
-
-This setup allows integration tests to exercise authentication and record-ownership behavior without depending on a real identity provider, while keeping a clear separation from production authentication flows.
-
-
-From the repository root, you can start the API and a PostgreSQL database using Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
 This will:
-- Start a `postgres` container with a dev-only database and credentials.
-- Build and start the `webapi` container configured to talk to that Postgres instance.
+- Build and start the WebAPI container.
+- Start a PostgreSQL container configured for local development.
 
 Once running:
-- API base URL (inside Docker): `http://localhost:8080`
+- API base URL: `http://localhost:8080`
 - Swagger UI: `http://localhost:8080/swagger`
 
-To stop the environment:
+Stop everything with:
 
 ```bash
 docker compose down
 ```
 
-## Monitoring with Sentry
+### 3. Run the WebAPI directly (without Docker)
 
-The WebAPI integrates with Sentry.io for error and performance monitoring while keeping the Domain and Application layers free of Sentry-specific dependencies.
+If you prefer to run the API directly from the SDK (for example when iterating quickly on code):
 
-### Configuration
+```bash
+dotnet build clean-architecture.slnx
+DotNetCliToolReference
 
-Sentry is configured via the `Sentry` section in `clean-architecture/WebAPI/appsettings*.json` (or equivalent environment variables):
+dotnet run --project clean-architecture/WebAPI/WebAPI.csproj
+```
 
-- `Sentry:Enabled` – `true` to enable Sentry, `false` to disable it.
-- `Sentry:Dsn` – the Sentry Data Source Name for this application (do **not** commit real DSNs to source control).
-- `Sentry:Environment` – logical environment name (for example, `Development`, `Testing`, `Staging`, `Production`).
-- `Sentry:TracesSampleRate` – fraction (0.0–1.0) controlling how many HTTP requests are captured for performance tracing.
+By default, the WebAPI reads its database and auth settings from `clean-architecture/WebAPI/appsettings.Development.json` and environment variables. You can point it to a local Postgres instance or use the in‑memory database depending on your configuration.
 
-Example environment variable configuration for local development:
+### 4. Configure Firebase Authentication (optional but recommended)
+
+To call secured endpoints, configure Firebase as the identity provider (example values):
+
+- In `clean-architecture/WebAPI/appsettings.Development.json`:
+  - `Authentication:Authority = "https://securetoken.google.com/<your-firebase-project-id>"`
+  - `Authentication:Audience = "<your-firebase-project-id>"`
+- Obtain a Firebase **ID token** for a signed‑in user and send it as:
+  - `Authorization: Bearer <firebase-id-token>`
+
+The API validates the token and maps the subject (`sub`) claim to the `ExternalAuthId` used by the user domain model.
+
+### 5. Configure Sentry monitoring (optional)
+
+Sentry is completely optional; if disabled, the app still runs normally.
+
+Set these environment variables (or the equivalent settings in `appsettings*.json`) to enable Sentry when running locally or via Docker:
 
 ```bash
 export Sentry__Enabled=true
@@ -210,31 +106,37 @@ export Sentry__Environment=Development
 export Sentry__TracesSampleRate=0.2
 ```
 
-Replace `{{SENTRY_DSN}}` with your actual DSN from Sentry or inject it via your preferred secret management solution.
+Replace `{{SENTRY_DSN}}` with your own DSN from Sentry. When enabled, unhandled errors and selected warnings from the WebAPI will be sent to Sentry with route and environment context.
 
-### Behavior and architecture
+## Configuration and environment variables
 
-- Sentry is initialized in `WebAPI/Program.cs` via a small configuration helper that:
-  - Reads the `Sentry` configuration section.
-  - Enables Sentry only when `Sentry:Enabled` is `true`.
-  - Adds Sentry’s ASP.NET Core integration and optional request tracing middleware.
-- The `Infrastructure` layer provides a `SentryObservabilityService` implementation of `IObservabilityService` which:
-  - Logs warnings and errors via `ILogger`.
-  - Forwards errors and selected warnings to Sentry when the Sentry SDK is enabled.
-- Domain and Application layers depend only on the `IObservabilityService` abstraction and remain unaware of Sentry types.
+Most configuration lives in `clean-architecture/WebAPI/appsettings.json` plus the environment-specific files (`appsettings.Development.json`, `appsettings.Production.json`). Any `Section:Key` can be overridden with an environment variable named `Section__Key` (double underscore).
 
-### Verifying Sentry locally
+Common examples:
 
-1. Configure Sentry via environment variables as shown above.
-2. Run the WebAPI project:
+- **Database**
+  - `UseInMemoryDB` – `true` to use the in-memory database, `false` to use Postgres.
+  - `ConnectionStrings:DbContext` / `ConnectionStrings__DbContext` – Postgres connection string when `UseInMemoryDB` is `false`.
+- **Authentication (Firebase)**
+  - `Authentication:Authority` / `Authentication__Authority` – JWT issuer (e.g. `https://securetoken.google.com/<project-id>`).
+  - `Authentication:Audience` / `Authentication__Audience` – JWT audience (usually the Firebase project id).
+- **CORS / frontend**
+  - `ClientApp:Origin` / `ClientApp__Origin` – allowed browser origin (e.g. `http://localhost:3000` in development).
+- **Admin bootstrap (optional)**
+  - `AdminUser:SeedOnStartup` / `AdminUser__SeedOnStartup` – whether to seed an admin user at startup.
+  - `AdminUser:DisplayName`, `AdminUser:Email`, `AdminUser:Password` – admin identity details, typically set via environment variables in higher environments.
+- **Sentry (optional)**
+  - `Sentry:Enabled` / `Sentry__Enabled` – toggle Sentry on/off.
+  - `Sentry:EnableLogs` / `Sentry__EnableLogs` – toggle Sentry logs on/off.
+  - `Sentry:Dsn` / `Sentry__Dsn` – Sentry DSN (must come from a secret store or environment variable).
+  - `Sentry:Environment` / `Sentry__Environment` – logical environment name (Development, Staging, Production).
 
-   ```bash
-   dotnet run --project clean-architecture/WebAPI/WebAPI.csproj
-   ```
+In production, you are expected to:
 
-3. Trigger a controlled test error (for example, by temporarily throwing an exception in a dev-only endpoint) and confirm that the event appears in your Sentry project with route and environment context.
+- Set `AllowedHosts` to the hostnames the API should serve.
+- Configure `ClientApp:Origin` and, if needed, CORS overrides via environment variables.
+- Provide real Postgres, Firebase, admin, and Sentry settings via your preferred secret management solution.
 
-The `WebAPI.Tests` project includes integration tests that:
+---
 
-- Verify `/health` responds successfully when Sentry is disabled.
-- Verify the Sentry hub is registered and the application still serves `/health` when Sentry is enabled via configuration.
+In short: **clone this repo, configure database, Firebase, and (optionally) Sentry/env-specific values, then run either `docker compose up --build` or `dotnet run --project clean-architecture/WebAPI/WebAPI.csproj` to start the boilerplate API backed by PostgreSQL.**
